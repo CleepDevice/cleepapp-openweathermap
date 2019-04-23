@@ -13,10 +13,10 @@ import time
 
 __all__ = [u'Openweathermap']
 
-
 class Openweathermap(RaspIotModule):
     """
-    OpenWeatherMap module
+    OpenWeatherMap application.
+    Returns current weather conditions and forecast.
 
     Note:
         https://openweathermap.org/api
@@ -26,7 +26,6 @@ class Openweathermap(RaspIotModule):
     MODULE_PRICE = 0
     MODULE_DEPS = []
     MODULE_DESCRIPTION = u'Gets weather conditions using OpenWeatherMap service'
-    MODULE_LOCKED = False
     MODULE_TAGS = [u'weather', u'forecast']
     MODULE_COUNTRY = None
     MODULE_URLINFO = None
@@ -136,7 +135,7 @@ class Openweathermap(RaspIotModule):
         self.__forecast = []
 
         #events
-        self.openweathermapWeatherUpdate = self._get_event('openweathermap.weather.update')
+        self.openweathermap_weather_update = self._get_event('openweathermap.weather.update')
 
     def _configure(self):
         """
@@ -181,6 +180,13 @@ class Openweathermap(RaspIotModule):
         """
         if self.weather_task is not None:
             self.weather_task.stop()
+
+    def __owm_request(self, ):
+        """
+        Request OWM api
+        """
+        #TODO
+        pass
 
     def __get_weather(self, apikey):
         """
@@ -343,6 +349,22 @@ class Openweathermap(RaspIotModule):
     def __weather_task(self):
         """
         Weather task in charge to refresh weather condition every hours
+        Send event with data::
+
+            {
+                lastupdate (int): timestamp,
+                icon (string): openweathermap icon,
+                condition (string): openweathermap condition string (english),
+                code (int): openweather condition code,
+                celsius (float): current temperature in celsius,
+                fahrenheit (float): current temperature in fahrenheit,
+                pressure (float): current pressure,
+                humidity (float): current humidity,
+                wind_speed (float): current wind speed,
+                wind_direction (string): current wind direction,
+                wind_degrees (float): current wind degrees
+            }
+
         """
         try:
             self.logger.debug(u'Update weather conditions')
@@ -399,8 +421,7 @@ class Openweathermap(RaspIotModule):
                 self._update_device(self.__owm_uuid, device)
 
                 #and emit event
-                self.openweathermapWeatherUpdate.send(params=device, device_id=self.__owm_uuid)
-                self.openweathermapWeatherUpdate.render(u'display', params=device)
+                self.openweathermap_weather_update.send(params=device, device_id=self.__owm_uuid)
 
         except Exception as e:
             self.logger.exception(u'Exception during weather task:')

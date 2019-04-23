@@ -1,0 +1,6 @@
+# docs
+docs/_build
+docs/source
+docs/*.zip
+docs/*.txt
+
