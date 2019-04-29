@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
     
 import logging
-from raspiot.utils import CommandError, MissingParameter
+from raspiot.utils import CommandError, MissingParameter, InvalidParameter
 from raspiot.libs.internals.task import Task
 from raspiot.raspiot import RaspIotModule
 import urllib
-import urllib2
-import ssl
+import urllib3
+#import ssl
 import json
 import time
 
@@ -133,6 +133,7 @@ class Openweathermap(RaspIotModule):
         self.weather_task = None
         self.__owm_uuid = None
         self.__forecast = []
+        self.http = urllib3.PoolManager()
 
         #events
         self.openweathermap_weather_update = self._get_event('openweathermap.weather.update')
@@ -168,10 +169,10 @@ class Openweathermap(RaspIotModule):
         last_update = devices[self.__owm_uuid][u'lastupdate']
         if last_update is None or last_update+self.OWM_TASK_DELAY<time.time():
             self.logger.debug(u'Update weather at startup')
-            self.__weather_task()
+            self._weather_task()
 
         #start weather task
-        self.weather_task = Task(self.OWM_TASK_DELAY, self.__weather_task, self.logger)
+        self.weather_task = Task(self.OWM_TASK_DELAY, self._weather_task, self.logger)
         self.weather_task.start()
 
     def _stop(self):
@@ -181,14 +182,39 @@ class Openweathermap(RaspIotModule):
         if self.weather_task is not None:
             self.weather_task.stop()
 
-    def __owm_request(self, ):
+    def _owm_request(self, url, params):
         """
         Request OWM api
-        """
-        #TODO
-        pass
 
-    def __get_weather(self, apikey):
+        Args:
+            url (string): request url
+            params (dict): dict of parameters
+
+        Returns:
+            tuple: request response::
+
+                (
+                    status (int): request status code,
+                    data (dict): request response data
+                )
+
+        """
+        status = None
+        resp_data = None
+        try:
+            self.logger.debug(u'Request params: %s' % params)
+            resp = self.http.request('GET', url, fields=params)
+            resp_data = json.loads(resp.data.decode('utf-8'))
+            status = resp.status
+            if status!=200:
+                self.logger.error(u'OWM api response [%s]: %s' % (status, resp_data))
+
+        except:
+            self.logger.exception('Error while requesting requesting OWM API:')
+
+        return (status, resp_data)
+    
+    def _get_weather(self, apikey):
         """
         Get weather condition
 
@@ -201,74 +227,34 @@ class Openweathermap(RaspIotModule):
         """
         #check parameter
         if apikey is None or len(apikey)==0:
-            raise InvalidParameter(u'Apikey parameter is missing')
+            raise MissingParameter(u'Parameter "apikey" is missing')
 
         #get position infos from system module
-        resp = self.send_command(u'get_city', u'system')
-        self.logger.debug(u'Get city from system resp: %s' % resp)
+        resp = self.send_command(u'get_position', u'parameters')
+        self.logger.debug(u'Get position from parameters module resp: %s' % resp)
         if not resp:
-            raise CommandError('No response')
+            raise CommandError('No response from parameters module')
         elif resp[u'error']:
             raise CommandError(resp[u'message'])
+        position = resp[u'data']
 
-        #create city pattern
-        pattern = resp[u'data'][u'city']
-        if len(resp[u'data'][u'country'])>0:
-            pattern = u'%s,%s' % (resp[u'data'][u'city'], resp[u'data'][u'country'])
+        #request api
+        (status, resp) = self._owm_request(self.OWM_WEATHER_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
+        self.logger.debug(u'OWM response: %s' % (resp))
 
-        #prepare request parameters
-        params = urllib.urlencode({
-            u'appid': apikey,
-            u'q': pattern,
-            u'units': u'metric',
-            u'mode': u'json'
-        })
-        self.logger.debug(u'Request params: %s' % params)
+        #handle errors
+        if status==401:
+            raise Exception(u'Invalid OWM api key')
+        elif status!=200:
+            raise Exception(u'Error requesting openweathermap api [%s]' % status)
+        if u'cod' not in resp:
+            raise Exception(u'Invalid OWM api response format. Is API changed?')
+        elif resp[u'cod']!=200: #cod is int for weather request
+            raise Exception(resp[u'message'] if u'message' in resp else 'Unknown error')
 
-        error = None
-        try:
-            #launch request
-            try:
-                #try with ssl context
-                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                req = urllib2.urlopen(u'%s?%s' % (self.OWM_WEATHER_URL, params), context=context)
-            except:
-                #fallback with no ssl context to be compatible with old python version (2.7.3)
-                req = urllib2.urlopen(u'%s?%s' % (self.OWM_WEATHER_URL, params))
-            res = req.read()
-            req.close()
+        return resp
 
-            #parse request result
-            data = json.loads(res)
-            self.logger.debug(u'Weather response: %s' % (data))
-            if data.has_key(u'cod'):
-                if data[u'cod']!=200:
-                    #request failed, get error message
-                    if data.has_key(u'message'):
-                        error = data[u'message']
-                    else:
-                        error = u'Unknown error'
-            else:
-                #invalid format
-                self.logger.error(u'Invalid response format')
-                error = u'Internal error'
-
-        except urllib2.HTTPError as e:
-            if e.code==401:
-                error = u'Invalid apikey'
-            else:
-                error = u'Unknown error'
-
-        except:
-            self.logger.exception(u'Unable to get weather:')
-            error = u'Internal error'
-
-        if error is not None:
-            raise CommandError(error)
-
-        return data
-
-    def __get_forecast(self, apikey):
+    def _get_forecast(self, apikey):
         """
         Get forecast (5 days with 3 hours step)
 
@@ -281,72 +267,36 @@ class Openweathermap(RaspIotModule):
         """
         #check parameter
         if apikey is None or len(apikey)==0:
-            raise InvalidParameter(u'Apikey parameter is missing')
+            raise MissingParameter(u'Parameter "apikey" is missing')
 
         #get position infos from system module
-        resp = self.send_command(u'get_city', u'system')
-        self.logger.debug(u'Get city from system resp: %s' % resp)
+        resp = self.send_command(u'get_position', u'parameters')
+        self.logger.debug(u'Get position from parameters module resp: %s' % resp)
         if not resp:
-            raise CommandError('No response')
+            raise CommandError('No response from parameters module')
         elif resp[u'error']:
             raise CommandError(resp[u'message'])
+        position = resp[u'data']
 
-        #create city pattern
-        pattern = resp[u'data'][u'city']
-        if len(resp[u'data'][u'country'])>0:
-            pattern = u'%s,%s' % (resp[u'data'][u'city'], resp[u'data'][u'country'])
+        #request api
+        (status, resp) = self._owm_request(self.OWM_FORECAST_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
+        self.logger.info(u'OWM response: %s' % (resp))
 
-        #prepare request parameters
-        params = urllib.urlencode({
-            u'appid': apikey,
-            u'q': pattern,
-            u'units': u'metric',
-            u'mode': u'json'
-        })
-        self.logger.debug(u'Request params: %s' % params)
+        #handle errors
+        if status==401:
+            raise Exception(u'Invalid OWM api key')
+        elif status!=200:
+            raise Exception(u'Error requesting openweathermap api [%s]' % status)
+        if u'cod' not in resp:
+            raise Exception(u'Invalid OWM api response format. Is API changed?')
+        elif resp[u'cod']!='200': #cod is string for forecast request
+            raise Exception(resp[u'message'] if u'message' in resp else 'Unknown error')
+        if u'list' not in resp:
+            raise Exception(u'No forecast data retrieved')
 
-        error = None
-        try:
-            #launch request
-            try:
-                #try with ssl context
-                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                req = urllib2.urlopen(u'%s?%s' % (self.OWM_WEATHER_URL, params), context=context)
-            except:
-                #fallback with no ssl context to be compatible with old python version (2.7.3)
-                req = urllib2.urlopen(u'%s?%s' % (self.OWM_WEATHER_URL, params))
-            res = req.read()
-            req.close()
+        return resp[u'list']
 
-            #parse request result
-            data = json.loads(res)
-            self.logger.debug(u'Forecast response: %s' % (data))
-            if data.has_key(u'cod'):
-                if data[u'cod']!=u'200':
-                    error = u'Unknown error'
-                if not data.has_key(u'list'):
-                    error = u'No forecast data'
-            else:
-                #invalid format
-                self.logger.error(u'Invalid response format')
-                error = u'Internal error'
-
-        except urllib2.HTTPError as e:
-            if e.code==401:
-                error = u'Invalid apikey'
-            else:
-                error = u'Unknown error'
-
-        except:
-            self.logger.exception(u'Unable to get weather:')
-            error = u'Internal error'
-
-        if error is not None:
-            raise CommandError(error)
-
-        return data[u'list']
-
-    def __weather_task(self):
+    def _weather_task(self):
         """
         Weather task in charge to refresh weather condition every hours
         Send event with data::
@@ -372,8 +322,8 @@ class Openweathermap(RaspIotModule):
             config = self._get_config()
             if config[u'apikey'] is not None and len(config[u'apikey'])>0:
                 #apikey configured, get weather
-                weather = self.__get_weather(config[u'apikey'])
-                self.__forecast = self.__get_forecast(config[u'apikey'])
+                weather = self._get_weather(config[u'apikey'])
+                self.__forecast = self._get_forecast(config[u'apikey'])
 
                 #save current weather conditions
                 device = self._get_devices()[self.__owm_uuid]
@@ -437,11 +387,10 @@ class Openweathermap(RaspIotModule):
             bool: True if config saved successfully
         """
         if apikey is None or len(apikey)==0:
-            raise MissingParameter(u'Apikey parameter is missing')
+            raise MissingParameter(u'Parameter "apikey" is missing')
 
-        #test apikey
-        if not self.__get_weather(apikey):
-            raise CommandError(u'Unable to test')
+        #test apikey (should raise exception if error)
+        self._get_weather(apikey)
 
         #save config
         return self._update_config({
@@ -467,3 +416,4 @@ class Openweathermap(RaspIotModule):
             list: list of forecast data (every 3 hours)
         """
         return self.__forecast
+
