@@ -1,14 +1,28 @@
 {
-    "icon": "cloud",
-    "system": {
-        "widgets": {
-            "js": ["openweathermap.widget.js"],
-            "html": ["openweathermap.widget.html", "openweathermapDialog.widget.html"]
-        },
-        "services": ["openweathermap.service.js"]
-    },
+    "res": [
+        "openweathermap.png"
+    ], 
+    "global": {
+        "html": [
+            "openweathermap.widget.html",
+            "openweathermapDialog.widget.html"
+        ], 
+        "css": [
+            "weather-icons.min.css"
+        ], 
+        "js": [
+            "openweathermap.service.js", 
+            "openweathermap.widget.js"
+        ]
+    }, 
     "config": {
-        "js": ["openweathermap.directive.js"],
-        "html": ["openweathermap.directive.html"]
-    }
+        "html": [
+            "openweathermap.config.html"
+        ], 
+        "css": [], 
+        "js": [
+            "openweathermap.config.js"
+        ]
+    }, 
+    "icon": "cloud"
 }

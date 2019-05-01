@@ -31,8 +31,8 @@ var openweathermapService = function($q, $rootScope, rpcService, raspiotService)
                 raspiotService.devices[i].fahrenheit = params.fahrenheit;
                 raspiotService.devices[i].humidity = params.humidity;
                 raspiotService.devices[i].pressure = params.pressure;
-                raspiotService.devices[i].wind_speed = params.wind_speed;
-                raspiotService.devices[i].wind_direction = params.wind_direction;
+                raspiotService.devices[i].wind_speed = params.windspeed;
+                raspiotService.devices[i].wind_direction = params.winddirection;
                 break;
             }   
         }   

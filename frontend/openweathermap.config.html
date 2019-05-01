@@ -1,0 +1,30 @@
+<div layout="column" layout-padding ng-cloak>
+
+    <div layout="row" layout-xs="column" layout-align="start center" layout-padding>
+        <div>
+            <img mod-img-src="openweathermap.png"/>
+        </div>
+        <div>
+            <p>OpenWeatherMap is an online weather service that offers for free current weather conditions and forecast for next 5 days.</p>
+            <p>Please create a free account on <a href="https://home.openweathermap.org/" target="_blank">OpenWeatherMap</a> website.</p>
+            <p>Then paste below your apikey available from your <a href="https://home.openweathermap.org/api_keys" target="_blank">settings &gt; Api keys</a> page.</p>
+            <p>Once apikey filled, weather will be refreshed automatically every 15 mins.</p>
+        </div>
+    </div>
+
+    <md-list>
+        <md-list-item>
+            <md-icon md-svg-icon="chevron-right"></md-icon>
+            <p>Set OpenWeatherMap api key</p>
+            <md-input-container class="no-margin no-error-spacer" md-no-float>
+                <input ng-model="openweathermapCtl.apikey" aria="Apikey" placeholder="Apikey">
+            </md-input-container>
+            <md-button ng-click="openweathermapCtl.setApikey()" class="md-raised md-primary" ng-disabled="apikeyForm.$invalid">
+                <md-icon md-svg-icon="content-save"></md-icon>
+                Set apikey
+            </md-button>
+        </md-list-item>
+    </md-list>
+
+</div>
+
