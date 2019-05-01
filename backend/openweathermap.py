@@ -5,6 +5,7 @@ import logging
 from raspiot.utils import CommandError, MissingParameter, InvalidParameter
 from raspiot.libs.internals.task import Task
 from raspiot.raspiot import RaspIotModule
+from raspiot.utils import CATEGORIES
 import urllib
 import urllib3
 #import ssl
@@ -25,7 +26,11 @@ class Openweathermap(RaspIotModule):
     MODULE_VERSION = u'1.0.0'
     MODULE_PRICE = 0
     MODULE_DEPS = []
+    MODULE_CATEGORY = CATEGORIES.SERVICE
     MODULE_DESCRIPTION = u'Gets weather conditions using OpenWeatherMap service'
+    MODULE_LONGDESCRIPTION = u'This application gets data from OpenWeatherMap online service and displays it directly on your device \
+                               dashboard.<br>OpenWeatherMap allows to get for free current weather condition and 5 days forecast.<br> \
+                               This application also broadcasts weather event on all your devices.'
     MODULE_TAGS = [u'weather', u'forecast']
     MODULE_COUNTRY = None
     MODULE_URLINFO = u'https://github.com/tangb/cleepmod-openweathermap'
