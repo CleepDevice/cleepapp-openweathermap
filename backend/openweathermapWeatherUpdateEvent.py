@@ -40,9 +40,10 @@ class OpenweathermapWeatherUpdateEvent(Event):
             u'fahrenheit',
             u'pressure',
             u'humidity',
-            u'wind_speed',
-            u'wind_degrees',
-            u'wind_direction'
+            u'windspeed',
+            u'winddegrees',
+            u'winddirection',
+            u'lastupdate',
         ]
         return all(key in keys for key in params.keys())
 

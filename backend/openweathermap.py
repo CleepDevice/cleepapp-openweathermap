@@ -28,10 +28,10 @@ class Openweathermap(RaspIotModule):
     MODULE_DESCRIPTION = u'Gets weather conditions using OpenWeatherMap service'
     MODULE_TAGS = [u'weather', u'forecast']
     MODULE_COUNTRY = None
-    MODULE_URLINFO = None
-    MODULE_URLHELP = None
+    MODULE_URLINFO = u'https://github.com/tangb/cleepmod-openweathermap'
+    MODULE_URLHELP = u'https://github.com/tangb/cleepmod-openweathermap/wiki'
     MODULE_URLSITE = None
-    MODULE_URLBUGS = None
+    MODULE_URLBUGS = u'https://github.com/tangb/cleepmod-openweathermap/issues'
 
     MODULE_CONFIG_FILE = u'openweathermap.conf'
     DEFAULT_CONFIG = {
@@ -41,6 +41,7 @@ class Openweathermap(RaspIotModule):
     OWM_WEATHER_URL = u'http://api.openweathermap.org/data/2.5/weather'
     OWM_FORECAST_URL = u'http://api.openweathermap.org/data/2.5/forecast'
     OWM_TASK_DELAY = 900
+    OWM_PREVENT_FLOOD = 15
     OWM_WEATHER_CODES = {
         200: u'Thunderstorm with light rain',
         201: u'Thunderstorm with rain',
@@ -152,8 +153,8 @@ class Openweathermap(RaspIotModule):
                 u'fahrenheit': None,
                 u'humidity': None,
                 u'pressure': None,
-                u'wind_speed': None,
-                u'wind_direction': None
+                u'windspeed': None,
+                u'winddirection': None
             }
             self._add_device(owm)
 
@@ -166,21 +167,54 @@ class Openweathermap(RaspIotModule):
             raise Exception(u'Openweathermap should handle only one device')
 
         #update weather conditions
-        last_update = devices[self.__owm_uuid][u'lastupdate']
-        if last_update is None or last_update+self.OWM_TASK_DELAY<time.time():
-            self.logger.debug(u'Update weather at startup')
-            self._weather_task()
+        self._force_weather_update(devices)
 
         #start weather task
-        self.weather_task = Task(self.OWM_TASK_DELAY, self._weather_task, self.logger)
-        self.weather_task.start()
+        self._start_weather_task()
 
     def _stop(self):
         """
         Stop module
         """
+        self._stop_weather_task()
+
+    def _force_weather_update(self, devices=None):
+        """
+        Force weather update according to last update to not flood owm api
+
+        Args:
+            devices (list): list of devices. Performance optim, optional
+        """
+        #get devices if not provided
+        if devices is None:
+            devices = self.get_module_devices()
+
+        last_update = devices[self.__owm_uuid][u'lastupdate']
+        if last_update is None or last_update+self.OWM_PREVENT_FLOOD<time.time():
+            self.logger.debug(u'Update weather at startup')
+            self._weather_task()
+
+    def _start_weather_task(self):
+        """
+        Start weather taésk
+        """
+        if self.weather_task is None:
+            self.weather_task = Task(self.OWM_TASK_DELAY, self._weather_task, self.logger)
+            self.weather_task.start()
+
+    def _stop_weather_task(self):
+        """
+        Stop weather task
+        """
         if self.weather_task is not None:
             self.weather_task.stop()
+
+    def _restart_weather_task(self):
+        """
+        Restart weather task
+        """
+        self._stop_weather_task()
+        self._start_weather_task()
 
     def _owm_request(self, url, params):
         """
@@ -240,7 +274,7 @@ class Openweathermap(RaspIotModule):
 
         #request api
         (status, resp) = self._owm_request(self.OWM_WEATHER_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
-        self.logger.debug(u'OWM response: %s' % (resp))
+        self.logger.trace(u'OWM response: %s' % (resp))
 
         #handle errors
         if status==401:
@@ -280,7 +314,7 @@ class Openweathermap(RaspIotModule):
 
         #request api
         (status, resp) = self._owm_request(self.OWM_FORECAST_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
-        self.logger.info(u'OWM response: %s' % (resp))
+        self.logger.trace(u'OWM response: %s' % (resp))
 
         #handle errors
         if status==401:
@@ -310,9 +344,9 @@ class Openweathermap(RaspIotModule):
                 fahrenheit (float): current temperature in fahrenheit,
                 pressure (float): current pressure,
                 humidity (float): current humidity,
-                wind_speed (float): current wind speed,
-                wind_direction (string): current wind direction,
-                wind_degrees (float): current wind degrees
+                windspeed (float): current wind speed,
+                winddirection (string): current wind direction,
+                winddegrees (float): current wind degrees
             }
 
         """
@@ -356,22 +390,23 @@ class Openweathermap(RaspIotModule):
                         device[u'humidity'] = None
                 if weather.has_key('wind'):
                     if weather[u'wind'].has_key(u'speed'):
-                        device[u'wind_speed'] = weather[u'wind'][u'speed']
+                        device[u'windspeed'] = weather[u'wind'][u'speed']
                     else:
-                        device[u'wind_speed'] = None
+                        device[u'windspeed'] = None
                     if weather[u'wind'].has_key('deg'):
-                        device[u'wind_degrees'] = weather[u'wind'][u'deg']
+                        device[u'winddegrees'] = weather[u'wind'][u'deg']
                         index = int(round( (weather[u'wind'][u'deg'] % 360) / 22.5) + 1)
                         if index>=17:
                             index = 0
-                        device[u'wind_direction'] = self.OWM_WIND_DIRECTIONS[index]
+                        device[u'winddirection'] = self.OWM_WIND_DIRECTIONS[index]
                     else:
-                        device[u'wind_degrees'] = None
-                        device[u'wind_direction'] = None
+                        device[u'winddegrees'] = None
+                        device[u'winddirection'] = None
                 self._update_device(self.__owm_uuid, device)
 
                 #and emit event
-                self.openweathermap_weather_update.send(params=device, device_id=self.__owm_uuid)
+                event_keys = [u'icon', u'condition', u'code', u'celsius', u'fahrenheit', u'pressure', u'humidity', u'windspeed', u'winddegrees', u'winddirection', u'lastupdate']
+                self.openweathermap_weather_update.send(params={k:v for k,v in device.items() if k in event_keys}, device_id=self.__owm_uuid)
 
         except Exception as e:
             self.logger.exception(u'Exception during weather task:')
@@ -391,6 +426,10 @@ class Openweathermap(RaspIotModule):
 
         #test apikey (should raise exception if error)
         self._get_weather(apikey)
+
+        #test succeed, update weather right now and restart task
+        self._restart_weather_task()
+        self._force_weather_update()
 
         #save config
         return self._update_config({
