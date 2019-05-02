@@ -1,10 +1,15 @@
 {
     "res": [
-        "openweathermap.png"
+        "openweathermap.png", 
+        "fonts/weathericons-regular-webfont.svg", 
+        "fonts/weathericons-regular-webfont.woff2", 
+        "fonts/weathericons-regular-webfont.eot", 
+        "fonts/weathericons-regular-webfont.ttf", 
+        "fonts/weathericons-regular-webfont.woff"
     ], 
     "global": {
         "html": [
-            "openweathermap.widget.html",
+            "openweathermap.widget.html", 
             "openweathermapDialog.widget.html"
         ], 
         "css": [
