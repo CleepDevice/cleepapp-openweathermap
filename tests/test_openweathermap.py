@@ -131,7 +131,7 @@ class TestOpenweathermap(unittest.TestCase):
 
     def get_api_key(self):
         if u'OWM_API_KEY' not in os.environ:
-            raise Exception('Please set OWM_API_KEY environement variable')
+            raise Exception('Please set OWM_API_KEY environment variable')
         return os.environ['OWM_API_KEY']
 
     def test_get_weather_ok(self):
@@ -204,9 +204,9 @@ class TestOpenweathermap(unittest.TestCase):
         self.module._weather_task()
         device = self.module.get_module_devices()[uuid]
         self.assertEqual(device['code'], self.WEATHER_SAMPLE['weather'][0]['id'], 'code value is invalid')
-        self.assertEqual(device['wind_degrees'], self.WEATHER_SAMPLE['wind']['deg'], 'wind_degrees value is invalid')
-        self.assertTrue('wind_direction' in device, 'wind_direction value is missing')
-        self.assertEqual(device['wind_speed'], self.WEATHER_SAMPLE['wind']['speed'], 'wind_speed value is invalid')
+        self.assertEqual(device['winddegrees'], self.WEATHER_SAMPLE['wind']['deg'], 'winddegrees value is invalid')
+        self.assertTrue('winddirection' in device, 'winddirection value is missing')
+        self.assertEqual(device['windspeed'], self.WEATHER_SAMPLE['wind']['speed'], 'windspeed value is invalid')
         self.assertEqual(device['celsius'], self.WEATHER_SAMPLE['main']['temp'], 'celsius value is invalid')
         self.assertTrue('fahrenheit' in device, 'fahrenheit value is missing')
         self.assertEqual(device['condition'].lower(), self.WEATHER_SAMPLE['weather'][0]['description'].lower(), 'condition value is invalid')
@@ -229,9 +229,9 @@ class TestOpenweathermap(unittest.TestCase):
 
         weather = self.module.get_weather()
         self.assertEqual(weather['code'], self.WEATHER_SAMPLE['weather'][0]['id'], 'code value is invalid')
-        self.assertEqual(weather['wind_degrees'], self.WEATHER_SAMPLE['wind']['deg'], 'wind_degrees value is invalid')
-        self.assertTrue('wind_direction' in weather, 'wind_direction value is missing')
-        self.assertEqual(weather['wind_speed'], self.WEATHER_SAMPLE['wind']['speed'], 'wind_speed value is invalid')
+        self.assertEqual(weather['winddegrees'], self.WEATHER_SAMPLE['wind']['deg'], 'winddegrees value is invalid')
+        self.assertTrue('winddirection' in weather, 'winddirection value is missing')
+        self.assertEqual(weather['windspeed'], self.WEATHER_SAMPLE['wind']['speed'], 'windspeed value is invalid')
         self.assertEqual(weather['celsius'], self.WEATHER_SAMPLE['main']['temp'], 'celsius value is invalid')
         self.assertTrue('fahrenheit' in weather, 'fahrenheit value is missing')
         self.assertEqual(weather['condition'].lower(), self.WEATHER_SAMPLE['weather'][0]['description'].lower(), 'condition value is invalid')
@@ -276,3 +276,7 @@ class TestOpenweathermap(unittest.TestCase):
                 'longitude': -1.6883,
             }
         }
+
+if __name__ == "__main__":
+    unittest.main()
+    
