@@ -201,7 +201,7 @@ class Openweathermap(RaspIotModule):
 
     def _start_weather_task(self):
         """
-        Start weather taésk
+        Start weather task
         """
         if self.weather_task is None:
             self.weather_task = Task(self.OWM_TASK_DELAY, self._weather_task, self.logger)
@@ -257,12 +257,15 @@ class Openweathermap(RaspIotModule):
         """
         Get weather condition
 
+        Args:
+            apikey (string): OWM apikey
+
         Returns:
-            dict: weather conditions
-                http://openweathermap.org/current#parameter for output format
+            dict: weather conditions (see http://openweathermap.org/current#parameter for output format)
 
         Raises:
-            InvalidParameter, CommandError
+            InvalidParameter: if input parameter is invalid
+            CommandError: if command failed
         """
         #check parameter
         if apikey is None or len(apikey)==0:
@@ -297,12 +300,15 @@ class Openweathermap(RaspIotModule):
         """
         Get forecast (5 days with 3 hours step)
 
+        Args:
+            apikey (string): OWM apikey
+
         Returns:
-            dict: forecast
-                http://openweathermap.org/forecast5 for output format
+            dict: forecast (see http://openweathermap.org/forecast5 for output format)
 
         Raises:
-            InvalidParameter, CommandError
+            InvalidParameter: if input parameter is invalid
+            CommandError: if command failed
         """
         #check parameter
         if apikey is None or len(apikey)==0:
@@ -420,11 +426,14 @@ class Openweathermap(RaspIotModule):
         """ 
         Set openweathermap apikey
 
-        Params:
-            apikey (string): apikey
+        Args:
+            apikey (string): OWM apikey
 
         Returns:
-            bool: True if config saved successfully
+            bool: True if apikey saved successfully
+
+        Raises:
+            CommandError: if error occured while using apikey to get current weather
         """
         if apikey is None or len(apikey)==0:
             raise MissingParameter(u'Parameter "apikey" is missing')
