@@ -23,7 +23,7 @@ class Openweathermap(RaspIotModule):
         https://openweathermap.org/api
     """
     MODULE_AUTHOR = u'Cleep'
-    MODULE_VERSION = u'1.0.0'
+    MODULE_VERSION = u'1.0.1'
     MODULE_PRICE = 0
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE

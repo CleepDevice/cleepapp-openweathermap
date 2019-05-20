@@ -1,11 +1,11 @@
 {
     "res": [
-        "openweathermap.png", 
-        "fonts/weathericons-regular-webfont.svg", 
-        "fonts/weathericons-regular-webfont.woff2", 
         "fonts/weathericons-regular-webfont.eot", 
+        "fonts/weathericons-regular-webfont.svg", 
         "fonts/weathericons-regular-webfont.ttf", 
-        "fonts/weathericons-regular-webfont.woff"
+        "fonts/weathericons-regular-webfont.woff", 
+        "fonts/weathericons-regular-webfont.woff2", 
+        "openweathermap.png"
     ], 
     "global": {
         "html": [
@@ -13,6 +13,7 @@
             "openweathermapDialog.widget.html"
         ], 
         "css": [
+            "weather-icons-wind.min.css", 
             "weather-icons.min.css"
         ], 
         "js": [
