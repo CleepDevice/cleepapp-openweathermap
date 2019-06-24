@@ -136,7 +136,7 @@ class TestOpenweathermap(unittest.TestCase):
 
     def test_get_weather_ok(self):
         """test real owm api response"""
-        self.session.add_command_handler('get_position', self.__get_position)
+        self.session.mock_command('get_position', self.__get_position)
         self.module._get_weather = self.original_get_weather
         resp = self.module._get_weather(self.api)
         self.assertTrue(isinstance(resp, dict), 'get_weather response should be dict')
@@ -158,19 +158,19 @@ class TestOpenweathermap(unittest.TestCase):
 
     def test_get_weather_get_position_failed(self):
         self.module._get_weather = self.original_get_weather
-        self.session.add_command_handler('get_position', self.__get_position, True)
+        self.session.mock_command('get_position', self.__get_position, fail=True)
         with self.assertRaises(CommandError) as cm:
             self.module._get_weather(self.api)
-        self.assertEqual(cm.exception.message, 'TEST: command disabled for tests', 'Invalid message when get_position failed')
+        self.assertEqual(cm.exception.message, 'TEST: command fails for tests', 'Invalid message when get_position failed')
 
-        self.session.add_command_handler('get_position', self.__get_position, False, True)
+        self.session.mock_command('get_position', self.__get_position, fail=False, no_response=True)
         with self.assertRaises(CommandError) as cm:
             self.module._get_weather(self.api)
         self.assertEqual(cm.exception.message, 'No response from parameters module', 'Invalid message when get_position returns None')
 
     def test_get_forecast_ok(self):
         """test real owm api response"""
-        self.session.add_command_handler('get_position', self.__get_position)
+        self.session.mock_command('get_position', self.__get_position)
         self.module._get_forecast = self.original_get_forecast
         resp = self.module._get_forecast(self.api)
         self.assertTrue(isinstance(resp, list), 'get_forecast response should be list')
@@ -187,12 +187,12 @@ class TestOpenweathermap(unittest.TestCase):
 
     def test_get_forecast_get_position_failed(self):
         self.module._get_forecast = self.original_get_forecast
-        self.session.add_command_handler('get_position', self.__get_position, True)
+        self.session.mock_command('get_position', self.__get_position, fail=True)
         with self.assertRaises(CommandError) as cm:
             self.module._get_forecast(self.api)
-        self.assertEqual(cm.exception.message, 'TEST: command disabled for tests', 'Invalid message when get_position failed')
+        self.assertEqual(cm.exception.message, 'TEST: command fails for tests', 'Invalid message when get_position failed')
 
-        self.session.add_command_handler('get_position', self.__get_position, False, True)
+        self.session.mock_command('get_position', self.__get_position, fail=False, no_response=True)
         with self.assertRaises(CommandError) as cm:
             self.module._get_forecast(self.api)
         self.assertEqual(cm.exception.message, 'No response from parameters module', 'Invalid message when get_position returns None')
@@ -200,7 +200,7 @@ class TestOpenweathermap(unittest.TestCase):
     def test_weather_task_ok(self):
         uuid = self.module.get_module_devices().keys()[0]
         
-        calls = self.session.get_event_send_calls('openweathermap.weather.update')
+        calls = self.session.get_event_calls('openweathermap.weather.update')
         self.module._weather_task()
         device = self.module.get_module_devices()[uuid]
         self.assertEqual(device['code'], self.WEATHER_SAMPLE['weather'][0]['id'], 'code value is invalid')
@@ -213,7 +213,7 @@ class TestOpenweathermap(unittest.TestCase):
         self.assertIsNotNone(re.search(self.WEATHER_SAMPLE['weather'][0]['icon'], device['icon']), 'icon value is invalid')
         self.assertEqual(device['humidity'], self.WEATHER_SAMPLE['main']['humidity'], 'humidity value is invalid')
         self.assertEqual(device['pressure'], self.WEATHER_SAMPLE['main']['pressure'], 'pressure value is invalid')
-        self.assertEqual(self.session.get_event_send_calls('openweathermap.weather.update'), calls+1, '"openweathermap.weather.update" wasn\'t triggered')
+        self.assertEqual(self.session.get_event_calls('openweathermap.weather.update'), calls+1, '"openweathermap.weather.update" wasn\'t triggered')
 
     def test_get_forecast(self):
         #weather task fill forecast
@@ -241,13 +241,13 @@ class TestOpenweathermap(unittest.TestCase):
 
     def test_set_apikey_valid(self):
         """this test request real owm api"""
-        self.session.add_command_handler('get_position', self.__get_position)
+        self.session.mock_command('get_position', self.__get_position)
         self.module._get_weather = self.original_get_weather
         self.assertTrue(self.module.set_apikey(self.api))
 
     def test_set_apikey_invalid(self):
         """this test request real owm api"""
-        self.session.add_command_handler('get_position', self.__get_position)
+        self.session.mock_command('get_position', self.__get_position)
         self.module._get_weather = self.original_get_weather
         with self.assertRaises(Exception) as cm:
             self.module.set_apikey('theapikey')
