@@ -282,14 +282,14 @@ class Openweathermap(RaspIotModule):
 
         #request api
         (status, resp) = self._owm_request(self.OWM_WEATHER_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
-        self.logger.trace(u'OWM response: %s' % (resp))
+        self.logger.debug(u'OWM response: %s' % (resp))
 
         #handle errors
         if status==401:
             raise Exception(u'Invalid OWM api key')
         elif status!=200:
             raise Exception(u'Error requesting openweathermap api [%s]' % status)
-        if u'cod' not in resp:
+        if not isinstance(resp, dict) or u'cod' not in resp:
             raise Exception(u'Invalid OWM api response format. Is API changed?')
         elif resp[u'cod']!=200: #cod is int for weather request
             raise Exception(resp[u'message'] if u'message' in resp else 'Unknown error')

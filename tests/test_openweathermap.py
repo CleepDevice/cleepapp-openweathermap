@@ -7,6 +7,8 @@ from raspiot.utils import InvalidParameter, MissingParameter, CommandError, Unau
 from raspiot.libs.tests import session
 import os
 import re
+from backend.owmToDisplayAddOrReplaceMessageFormatter import OwmToDisplayAddOrReplaceMessageFormatter
+from raspiot.events.displayAddOrReplaceMessageProfile import DisplayAddOrReplaceMessageProfile
 
 class TestOpenweathermap(unittest.TestCase):
 
@@ -223,6 +225,30 @@ class TestOpenweathermap(unittest.TestCase):
         self.assertTrue(isinstance(forecast, list), 'forecast must be a list')
         self.assertEqual(len(forecast), len(self.FORECAST_SAMPLE), 'forecast content is invalid')
 
+    def test_get_forecast_owm_failed(self):
+        self.session.mock_command('get_position', self.__get_position)
+        self.module._get_forecast = self.original_get_forecast
+
+        self.module._owm_request = lambda u,d: (201, 'invaliddata')
+        with self.assertRaises(Exception) as cm:
+            self.module._get_forecast('apikey')
+        self.assertEqual(cm.exception.message, 'Error requesting openweathermap api [201]', 'Status not 200 should be handled')
+
+        self.module._owm_request = lambda u,d: (200, {'invaliddata'})
+        with self.assertRaises(Exception) as cm:
+            self.module._get_forecast('apikey')
+        self.assertEqual(cm.exception.message, 'Invalid OWM api response format. Is API changed?', 'Bad response not properly handled')
+
+        self.module._owm_request = lambda u,d: (200, {'cod': 201})
+        with self.assertRaises(Exception) as cm:
+            self.module._get_forecast('apikey')
+        self.assertEqual(cm.exception.message, 'Unknown error', 'Unknown received data is not properly handled')
+
+        self.module._owm_request = lambda u,d: (200, {'cod': 201, 'message':'TEST: owm error'})
+        with self.assertRaises(Exception) as cm:
+            self.module._get_forecast('apikey')
+        self.assertEqual(cm.exception.message, 'TEST: owm error', 'Specific OWM error is not properly handled')
+
     def test_get_weather(self):
         #weather task fill weather
         self.module._weather_task()
@@ -239,6 +265,30 @@ class TestOpenweathermap(unittest.TestCase):
         self.assertEqual(weather['humidity'], self.WEATHER_SAMPLE['main']['humidity'], 'humidity value is invalid')
         self.assertEqual(weather['pressure'], self.WEATHER_SAMPLE['main']['pressure'], 'pressure value is invalid')
 
+    def test_get_weather_owm_failed(self):
+        self.session.mock_command('get_position', self.__get_position)
+        self.module._get_weather = self.original_get_weather
+
+        self.module._owm_request = lambda u,d: (201, 'invaliddata')
+        with self.assertRaises(Exception) as cm:
+            self.module._get_weather('apikey')
+        self.assertEqual(cm.exception.message, 'Error requesting openweathermap api [201]', 'Status not 200 should be handled')
+
+        self.module._owm_request = lambda u,d: (200, {'invaliddata'})
+        with self.assertRaises(Exception) as cm:
+            self.module._get_weather('apikey')
+        self.assertEqual(cm.exception.message, 'Invalid OWM api response format. Is API changed?', 'Bad response not properly handled')
+
+        self.module._owm_request = lambda u,d: (200, {'cod': 201})
+        with self.assertRaises(Exception) as cm:
+            self.module._get_weather('apikey')
+        self.assertEqual(cm.exception.message, 'Unknown error', 'Unknown received data is not properly handled')
+
+        self.module._owm_request = lambda u,d: (200, {'cod': 201, 'message':'TEST: owm error'})
+        with self.assertRaises(Exception) as cm:
+            self.module._get_weather('apikey')
+        self.assertEqual(cm.exception.message, 'TEST: owm error', 'Specific OWM error is not properly handled')
+
     def test_set_apikey_valid(self):
         """this test request real owm api"""
         self.session.mock_command('get_position', self.__get_position)
@@ -252,7 +302,7 @@ class TestOpenweathermap(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             self.module.set_apikey('theapikey')
         self.assertEqual(cm.exception.message, 'Invalid OWM api key')
-    
+
     def test_set_apikey_invalid_param(self):
         with self.assertRaises(MissingParameter) as cm:
             self.module.set_apikey(None)
@@ -276,6 +326,44 @@ class TestOpenweathermap(unittest.TestCase):
                 'longitude': -1.6883,
             }
         }
+
+
+
+
+
+class TestOwmToDisplayAddOrReplaceMessageFormatter(unittest.TestCase):
+    def setUp(self):
+        self.session = session.Session(logging.CRITICAL)
+        self.formatter = OwmToDisplayAddOrReplaceMessageFormatter(self.session.bootstrap['events_factory'])
+
+    def tearDown(self):
+        self.session.clean()
+
+    def test_fill_profile(self):
+        event = {
+            'code': 802,
+            'condition': 'current condition',
+            'celsius': 28,
+            'fahrenheit': 72,
+        }
+
+        profile = self.formatter._fill_profile(event, DisplayAddOrReplaceMessageProfile())
+        self.assertTrue(isinstance(profile, DisplayAddOrReplaceMessageProfile), '_fill_profile should returns DisplayAddOrReplaceMessageProfile instance')
+        self.assertEqual(profile.uuid, 'openweathermap', 'uuid field is invalid')
+        self.assertTrue(len(profile.message)>0, 'Message field is invalid')
+
+    def test_fill_profile_fahrenheit(self):
+        event = {
+            'code': 802,
+            'condition': 'current condition',
+            'fahrenheit': 72,
+        }
+
+        profile = self.formatter._fill_profile(event, DisplayAddOrReplaceMessageProfile())
+        self.assertTrue(isinstance(profile, DisplayAddOrReplaceMessageProfile), '_fill_profile should returns DisplayAddOrReplaceMessageProfile instance')
+        self.assertEqual(profile.uuid, 'openweathermap', 'uuid field is invalid')
+        self.assertTrue(len(profile.message)>0, 'Message field is invalid')
+
 
 if __name__ == "__main__":
     unittest.main()
