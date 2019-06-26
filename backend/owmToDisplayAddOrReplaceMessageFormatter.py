@@ -85,14 +85,14 @@ class OwmToDisplayAddOrReplaceMessageFormatter(Formatter):
         962: ':cloudy:'
     }
 
-    def __init__(self, events_factory):
+    def __init__(self, events_broker):
         """
         Constructor
 
         Args:
-            events_factory (EventsFactory): events factory instance
+            events_broker (EventsBroker): events broker instance
         """ 
-        Formatter.__init__(self, events_factory, u'openweathermap.weather.update', DisplayAddOrReplaceMessageProfile())
+        Formatter.__init__(self, events_broker, u'openweathermap.weather.update', DisplayAddOrReplaceMessageProfile())
 
     def _fill_profile(self, event_values, profile):
         """

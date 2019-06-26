@@ -334,7 +334,7 @@ class TestOpenweathermap(unittest.TestCase):
 class TestOwmToDisplayAddOrReplaceMessageFormatter(unittest.TestCase):
     def setUp(self):
         self.session = session.Session(logging.CRITICAL)
-        self.formatter = OwmToDisplayAddOrReplaceMessageFormatter(self.session.bootstrap['events_factory'])
+        self.formatter = OwmToDisplayAddOrReplaceMessageFormatter(self.session.bootstrap['events_broker'])
 
     def tearDown(self):
         self.session.clean()
