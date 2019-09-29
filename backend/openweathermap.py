@@ -23,7 +23,7 @@ class Openweathermap(RaspIotModule):
         https://openweathermap.org/api
     """
     MODULE_AUTHOR = u'Cleep'
-    MODULE_VERSION = u'1.0.1'
+    MODULE_VERSION = u'1.1.0'
     MODULE_PRICE = 0
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
@@ -35,7 +35,7 @@ class Openweathermap(RaspIotModule):
     MODULE_COUNTRY = None
     MODULE_URLINFO = u'https://github.com/tangb/cleepmod-openweathermap'
     MODULE_URLHELP = u'https://github.com/tangb/cleepmod-openweathermap/wiki'
-    MODULE_URLSITE = None
+    MODULE_URLSITE = u'https://openweathermap.org/'
     MODULE_URLBUGS = u'https://github.com/tangb/cleepmod-openweathermap/issues'
 
     MODULE_CONFIG_FILE = u'openweathermap.conf'
