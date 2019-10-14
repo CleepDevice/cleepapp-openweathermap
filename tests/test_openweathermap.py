@@ -119,7 +119,7 @@ class TestOpenweathermap(unittest.TestCase):
     }
 
     def setUp(self):
-        self.session = session.Session(logging.CRITICAL)
+        self.session = session.TestSession(logging.CRITICAL)
         self.module = self.session.setup(Openweathermap)
         self.module._get_config = self.__get_config
         self.original_get_weather = self.module._get_weather
