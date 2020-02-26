@@ -8,7 +8,7 @@ from raspiot.libs.tests import session
 import os
 import re
 from backend.owmToDisplayAddOrReplaceMessageFormatter import OwmToDisplayAddOrReplaceMessageFormatter
-from raspiot.events.displayAddOrReplaceMessageProfile import DisplayAddOrReplaceMessageProfile
+from raspiot.profiles.displayAddOrReplaceMessageProfile import DisplayAddOrReplaceMessageProfile
 
 class TestOpenweathermap(unittest.TestCase):
 
@@ -120,6 +120,7 @@ class TestOpenweathermap(unittest.TestCase):
 
     def setUp(self):
         self.session = session.TestSession(logging.CRITICAL)
+        logging.basicConfig(level=logging.CRITICAL, format=u'%(asctime)s %(name)s:%(lineno)d %(levelname)s : %(message)s')
         self.module = self.session.setup(Openweathermap)
         self.module._get_config = self.__get_config
         self.original_get_weather = self.module._get_weather
@@ -333,7 +334,8 @@ class TestOpenweathermap(unittest.TestCase):
 
 class TestOwmToDisplayAddOrReplaceMessageFormatter(unittest.TestCase):
     def setUp(self):
-        self.session = session.Session(logging.CRITICAL)
+        self.session = session.TestSession(logging.CRITICAL)
+        logging.basicConfig(level=logging.CRITICAL, format=u'%(asctime)s %(name)s:%(lineno)d %(levelname)s : %(message)s')
         self.formatter = OwmToDisplayAddOrReplaceMessageFormatter(self.session.bootstrap['events_broker'])
 
     def tearDown(self):
