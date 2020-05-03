@@ -3,12 +3,12 @@ import logging
 import sys
 sys.path.append('../')
 from backend.openweathermap import Openweathermap
-from raspiot.utils import InvalidParameter, MissingParameter, CommandError, Unauthorized
+from raspiot.exception import InvalidParameter, MissingParameter, CommandError, Unauthorized
 from raspiot.libs.tests import session
 import os
 import re
 from backend.owmToDisplayAddOrReplaceMessageFormatter import OwmToDisplayAddOrReplaceMessageFormatter
-from raspiot.profiles.displayAddOrReplaceMessageProfile import DisplayAddOrReplaceMessageProfile
+from raspiot.profiles.displayaddorreplacemessageprofile import DisplayAddOrReplaceMessageProfile
 
 class TestOpenweathermap(unittest.TestCase):
 
@@ -119,9 +119,11 @@ class TestOpenweathermap(unittest.TestCase):
     }
 
     def setUp(self):
-        self.session = session.TestSession(logging.CRITICAL)
-        logging.basicConfig(level=logging.CRITICAL, format=u'%(asctime)s %(name)s:%(lineno)d %(levelname)s : %(message)s')
+        logging.basicConfig(level=logging.FATAL, format=u'%(asctime)s %(name)s:%(lineno)d %(levelname)s : %(message)s')
+        self.session = session.TestSession()
+
         self.module = self.session.setup(Openweathermap)
+        self.config = self.module._get_config()
         self.module._get_config = self.__get_config
         self.original_get_weather = self.module._get_weather
         self.original_get_forecast = self.module._get_forecast
@@ -255,6 +257,7 @@ class TestOpenweathermap(unittest.TestCase):
         self.module._weather_task()
 
         weather = self.module.get_weather()
+        logging.debug('Weather: %s' % weather)
         self.assertEqual(weather['code'], self.WEATHER_SAMPLE['weather'][0]['id'], 'code value is invalid')
         self.assertEqual(weather['winddegrees'], self.WEATHER_SAMPLE['wind']['deg'], 'winddegrees value is invalid')
         self.assertTrue('winddirection' in weather, 'winddirection value is missing')
@@ -315,9 +318,8 @@ class TestOpenweathermap(unittest.TestCase):
 
     
     def __get_config(self):
-        return {
-            'apikey': 'xxxxx'
-        }
+        self.config['apikey'] = 'xxxxx'
+        return self.config
 
     def __get_position(self):
         return {
@@ -334,8 +336,9 @@ class TestOpenweathermap(unittest.TestCase):
 
 class TestOwmToDisplayAddOrReplaceMessageFormatter(unittest.TestCase):
     def setUp(self):
-        self.session = session.TestSession(logging.CRITICAL)
         logging.basicConfig(level=logging.CRITICAL, format=u'%(asctime)s %(name)s:%(lineno)d %(levelname)s : %(message)s')
+        self.session = session.TestSession()
+
         self.formatter = OwmToDisplayAddOrReplaceMessageFormatter(self.session.bootstrap['events_broker'])
 
     def tearDown(self):
