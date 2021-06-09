@@ -426,7 +426,6 @@ class Openweathermap(CleepModule):
                     )
                 else:
                     device["icon"] = None
-                self.logger.debug('=====> %s' % weather["weather"][0])
                 if "id" in weather["weather"][0]:
                     device["condition"] = self.OWM_WEATHER_CODES[
                         weather["weather"][0]["id"]
@@ -464,7 +463,6 @@ class Openweathermap(CleepModule):
                 else:
                     device["winddegrees"] = None
                     device["winddirection"] = None
-            self.logger.debug('++++++ %s' % device)
             self._update_device(self.__owm_uuid, device)
 
             # and emit event
