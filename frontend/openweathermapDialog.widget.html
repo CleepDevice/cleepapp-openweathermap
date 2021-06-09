@@ -62,25 +62,41 @@
             <div layout="row">
                 <div flex></div>
                 <div>
-                    <md-button aria-label="Temperature" ng-click="owmCtl.change('temperature')">
+                    <md-button
+                        aria-label="Temperature"
+                        ng-class="{'md-raised md-primary': owmCtl.selection==='Temperature'}"
+                        ng-click="owmCtl.change('temperature')"
+                    >
                         <md-icon md-svg-icon="oil-temperature"></md-icon>
                         Temp.
                     </md-button>
                 </div>
                 <div>
-                    <md-button aria-label="Humidity" ng-click="owmCtl.change('humidity')">
+                    <md-button
+                        aria-label="Humidity"
+                        ng-class="{'md-raised md-primary': owmCtl.selection==='Humidity'}"
+                        ng-click="owmCtl.change('humidity')"
+                    >
                         <md-icon md-svg-icon="water-percent"></md-icon>
                         Humi.
                     </md-button>
                 </div>
                 <div>
-                    <md-button aria-label="Pressure" ng-click="owmCtl.change('pressure')">
+                    <md-button
+                        aria-label="Pressure"
+                        ng-class="{'md-raised md-primary': owmCtl.selection==='Pressure'}"
+                        ng-click="owmCtl.change('pressure')"
+                    >
                         <md-icon md-svg-icon="gauge"></md-icon>
                         Press.
                     </md-button>
                 </div>
                 <div>
-                    <md-button aria-label="Wind" ng-click="owmCtl.change('wind')">
+                    <md-button
+                        aria-label="Wind"
+                        ng-class="{'md-raised md-primary': owmCtl.selection==='Wind'}"
+                        ng-click="owmCtl.change('wind')"
+                    >
                         <md-icon md-svg-icon="weather-windy"></md-icon>
                         Wind
                     </md-button>
