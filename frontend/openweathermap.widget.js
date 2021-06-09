@@ -3,7 +3,10 @@
  * Display openweathermap dashboard widget
  * @see owm=>weather-icons associations from https://gist.github.com/tbranyen/62d974681dea8ee0caa1
  */
-var widgetOpenweathermapDirective = function(raspiotService, $mdDialog, $q, openweathermapService) {
+angular
+.module('Cleep')
+.directive('openweathermapWidget', ['$mdDialog', '$q', 'openweathermapService',
+function($mdDialog, $q, openweathermapService) {
 
     var widgetOpenweathermapController = ['$scope', function($scope) {
         var self = this;
@@ -142,71 +145,55 @@ var widgetOpenweathermapDirective = function(raspiotService, $mdDialog, $q, open
         /**
          * Return weather-icons icon
          */
-        self.getIconClass = function()
-        {
-            if( self.icons[self.device.code] )
-            {
-                if( self.device.icon.endsWith('d.png') )
-                {
-                    //day icon
+        self.getIconClass = function() {
+            if( self.icons[self.device.code] ) {
+                if( self.device.icon.endsWith('d.png') ) {
+                    // day icon
                     return 'wi wi-day-' + self.icons[self.device.code];
-                }
-                else if( self.device.icon.endsWith('n.png') ) 
-                {
-                    //night icon
+                } else if( self.device.icon.endsWith('n.png') ) {
+                    // night icon
                     return 'wi wi-day-' + self.icons[self.device.code];
-                }
-                else
-                {
-                    //invariable icon
+                } else {
+                    // invariable icon
                     return 'wi wi-' + self.icons[self.device.code];
                 }
             }
-            else
-            {
-                return 'wi wi-na';
-            }
+
+            return 'wi wi-na';
         };
 
         /**
          * Return weather-icons wind icon
          */
-        self.getWindClass = function()
-        {
-            if( self.device.wind_direction )
-            {
-                return 'wi wi-wind wi-towards-' + self.device.wind_direction.toLowerCase();
+        self.getWindClass = function() {
+            if( self.device.winddirection ) {
+                return 'wi wi-wind wi-towards-' + self.device.winddirection.toLowerCase();
             }
-            else
-            {
-                return 'wi wi-na';
-            }
+
+            return 'wi wi-na';
         };
 
         /**
          * Cancel dialog
          */
-        self.cancelDialog = function()
-        {
+        self.cancelDialog = function() {
             $mdDialog.cancel();
         };
 
         /**
          * Load forecast when opening dialog
          */
-        self.loadDialogData = function()
-        {
+        self.loadDialogData = function() {
             openweathermapService.getForecast()
                 .then(function(forecast) {
-                    //clear data
-                    self.windData = [];
-                    self.temperatureData = [];
-                    self.pressureData = [];
-                    self.humidityData = [];
+                    // clear data
+                    self.windData.splice(0, self.windData.length);
+                    self.temperatureData.splice(0, self.temperatureData.length);
+                    self.pressureData.splice(0, self.pressureData.length);
+                    self.humidityData.splice(0, self.humidityData.length);
 
-                    //fill data
-                    for( var i=0; i<forecast.data.length; i++ )
-                    {
+                    // fill data
+                    for( var i=0; i<forecast.data.length; i++ ) {
                         var ts = forecast.data[i].dt;
                         self.windData.push([ts, forecast.data[i].wind.speed]);
                         self.humidityData.push([ts, forecast.data[i].main.humidity]);
@@ -214,10 +201,10 @@ var widgetOpenweathermapDirective = function(raspiotService, $mdDialog, $q, open
                         self.temperatureData.push([ts, forecast.data[i].main.temp]);
                     }
 
-                    //set current forecast data (temperature at opening)
+                    // set current forecast data (temperature at opening)
                     self.change(null);
 
-                    //disable flag loading
+                    // disable flag loading
                     self.loading = false;
                 });
         };
@@ -225,52 +212,44 @@ var widgetOpenweathermapDirective = function(raspiotService, $mdDialog, $q, open
         /**
          * Change type of charts
          */
-        self.change = function(type)
-        {
-            if( self.selection!==type )
-            {
-                if( type==='humidity' )
-                {
+        self.change = function(type) {
+            if( self.selection!==type ) {
+                self.forecastData.splice(0, self.forecastData.length);
+                if (type === 'humidity') {
                     self.unit = '%';
                     self.graphOptions.chart.color = ['#3F51B5'];
                     self.graphOptions.chart.yAxis.axisLabel = self.unit;
-                    self.forecastData = [{
+                    self.forecastData.push({
                         key: 'Humidity',
                         values: self.humidityData
-                    }];
+                    });
                     self.selection = 'Humidity';
-                }
-                else if( type==='pressure' )
-                {
+                } else if (type === 'pressure') {
                     self.unit = 'hPa';
                     self.graphOptions.chart.color = ['#CDDC39'];
                     self.graphOptions.chart.yAxis.axisLabel = self.unit;
-                    self.forecastData = [{
+                    self.forecastData.push({
                         key: 'Pressure',
                         values: self.pressureData
-                    }];
+                    });
                     self.selection = 'Pressure';
-                }
-                else if( type==='wind' )
-                {
+                } else if (type === 'wind') {
                     self.unit = 'm/s';
                     self.graphOptions.chart.color = ['#03A9F4'];
                     self.graphOptions.chart.yAxis.axisLabel = self.unit;
-                    self.forecastData = [{
+                    self.forecastData.push({
                         key: 'Wind',
                         values: self.windData
-                    }];
+                    });
                     self.selection = 'Wind';
-                }
-                else
-                {
+                } else {
                     self.unit = '°C';
                     self.graphOptions.chart.color = ['#FF9800'];
                     self.graphOptions.chart.yAxis.axisLabel = self.unit;
-                    self.forecastData = [{
+                    self.forecastData.push({
                         key: 'Temperature',
                         values: self.temperatureData
-                    }];
+                    });
                     self.selection = 'Temperature';
                 }
             }
@@ -281,40 +260,27 @@ var widgetOpenweathermapDirective = function(raspiotService, $mdDialog, $q, open
          */
         self.openDialog = function() {
             self.loading = true;
-            self.forecastData = [];
+            self.forecastData.splice(0, self.forecastData.length);
             $mdDialog.show({
                 controller: function() { return self; },
                 controllerAs: 'owmCtl',
                 templateUrl: 'openweathermapDialog.widget.html',
                 parent: angular.element(document.body),
                 clickOutsideToClose: true,
-                onComplete: self.loadDialogData
+                onComplete: self.loadDialogData,
+                onRemoving: () => {
+                    // workaround to remove tooltips when dialog is closed: dialog is closed before 
+                    // nvd3 has time to remove tooltips elements
+                    var tooltips = $("div[id^='nvtooltip']");
+                    for( var i=0; i<tooltips.length; i++ ) {
+                        tooltips[i].remove();
+                    }
+                    self.forecastData.splice(0, self.forecastData.length);
+                }
             });
         };
 
-        $scope.$on('$destroy', function() {
-            //workaround to remove tooltips when dialog is closed: dialog is closed before 
-            //nvd3 has time to remove tooltips elements
-            var tooltips = $("div[id^='nvtooltip']");
-            for( var i=0; i<tooltips.length; i++ )
-            {
-                tooltips[i].remove();
-            }
-            self.forecastData = [];
-        });
-
-        /**
-         * Init controller
-         */
-        self.init = function(el)
-        {
-        };
-
     }];
-
-    var widgetOpenweathermapLink = function(scope, element, attrs, controller) {
-        controller.init(element);
-    };
 
     return {
         restrict: 'EA',
@@ -325,10 +291,6 @@ var widgetOpenweathermapDirective = function(raspiotService, $mdDialog, $q, open
         },
         controller: widgetOpenweathermapController,
         controllerAs: 'widgetCtl',
-        link: widgetOpenweathermapLink
     };
-};
-
-var RaspIot = angular.module('RaspIot');
-RaspIot.directive('widgetOpenweathermapDirective', ['raspiotService', '$mdDialog', '$q', 'openweathermapService', widgetOpenweathermapDirective]);
+}]);
 

@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-    
-import logging
-from raspiot.exception import CommandError, MissingParameter, InvalidParameter
-from raspiot.libs.internals.task import Task
-from raspiot.core import RaspIotModule
-from raspiot.common import CATEGORIES
-import urllib
-import urllib3
-#import ssl
+
 import json
 import time
+import urllib3
+from cleep.exception import CommandError, MissingParameter
+from cleep.libs.internals.task import Task
+from cleep.core import CleepModule
+from cleep.common import CATEGORIES
 
-__all__ = [u'Openweathermap']
+__all__ = ["Openweathermap"]
 
-class Openweathermap(RaspIotModule):
+
+class Openweathermap(CleepModule):
     """
     OpenWeatherMap application.
     Returns current weather conditions and forecast.
@@ -22,107 +20,126 @@ class Openweathermap(RaspIotModule):
     Note:
         https://openweathermap.org/api
     """
-    MODULE_AUTHOR = u'Cleep'
-    MODULE_VERSION = u'1.1.0'
-    MODULE_PRICE = 0
+
+    MODULE_AUTHOR = "Cleep"
+    MODULE_VERSION = "1.1.0"
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
-    MODULE_DESCRIPTION = u'Gets weather conditions using OpenWeatherMap service'
-    MODULE_LONGDESCRIPTION = u'This application gets data from OpenWeatherMap online service and displays it directly on your device \
-                               dashboard.<br>OpenWeatherMap allows to get for free current weather condition and 5 days forecast.<br> \
-                               This application also broadcasts weather event on all your devices.'
-    MODULE_TAGS = [u'weather', u'forecast']
+    MODULE_DESCRIPTION = "Gets weather conditions using OpenWeatherMap service"
+    MODULE_LONGDESCRIPTION = (
+        "This application gets data from OpenWeatherMap online service and displays it directly on your device "
+        "dashboard.<br>OpenWeatherMap allows to get for free current weather condition and 5 days forecast.<br> "
+        "This application also broadcasts weather event on all your devices."
+    )
+    MODULE_TAGS = ["weather", "forecast"]
     MODULE_COUNTRY = None
-    MODULE_URLINFO = u'https://github.com/tangb/cleepmod-openweathermap'
-    MODULE_URLHELP = u'https://github.com/tangb/cleepmod-openweathermap/wiki'
-    MODULE_URLSITE = u'https://openweathermap.org/'
-    MODULE_URLBUGS = u'https://github.com/tangb/cleepmod-openweathermap/issues'
+    MODULE_URLINFO = "https://github.com/tangb/cleepadd-openweathermap"
+    MODULE_URLHELP = "https://github.com/tangb/cleepadd-openweathermap/wiki"
+    MODULE_URLSITE = "https://openweathermap.org/"
+    MODULE_URLBUGS = "https://github.com/tangb/cleepadd-openweathermap/issues"
 
-    MODULE_CONFIG_FILE = u'openweathermap.conf'
-    DEFAULT_CONFIG = {
-        u'apikey': None
-    }
+    MODULE_CONFIG_FILE = "openweathermap.conf"
+    DEFAULT_CONFIG = {"apikey": None}
 
-    OWM_WEATHER_URL = u'http://api.openweathermap.org/data/2.5/weather'
-    OWM_FORECAST_URL = u'http://api.openweathermap.org/data/2.5/forecast'
+    OWM_WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
+    OWM_FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast"
+    OWM_ICON_URL = "http://openweathermap.org/img/w/%s.png"
     OWM_TASK_DELAY = 900
     OWM_PREVENT_FLOOD = 15
     OWM_WEATHER_CODES = {
-        200: u'Thunderstorm with light rain',
-        201: u'Thunderstorm with rain',
-        202: u'Thunderstorm with heavy rain',
-        210: u'Light thunderstorm',
-        211: u'Thunderstorm',
-        212: u'Heavy thunderstorm',
-        221: u'Ragged thunderstorm',
-        230: u'Thunderstorm with light drizzle',
-        231: u'Thunderstorm with drizzle',
-        232: u'Thunderstorm with heavy drizzle',
-        300: u'Light intensity drizzle',
-        301: u'Drizzle',
-        302: u'Heavy intensity drizzle',
-        310: u'Light intensity drizzle rain',
-        311: u'Drizzle rain',
-        312: u'Heavy intensity drizzle rain',
-        313: u'Shower rain and drizzle',
-        314: u'Heavy shower rain and drizzle',
-        321: u'Shower drizzle',
-        500: u'Light rain',
-        501: u'Moderate rain',
-        502: u'Heavy intensity rain',
-        503: u'Very heavy rain',
-        504: u'Extreme rain',
-        511: u'Freezing rain',
-        520: u'Light intensity shower rain',
-        521: u'Shower rain',
-        522: u'Heavy intensity shower rain',
-        531: u'Ragged shower rain',
-        600: u'Light snow',
-        601: u'Snow',
-        602: u'Heavy snow',
-        611: u'Sleet',
-        612: u'Shower sleet',
-        615: u'Light rain and snow',
-        616: u'Rain and snow',
-        620: u'Light shower snow',
-        621: u'Shower snow',
-        622: u'Heavy shower snow',
-        701: u'Mist',
-        711: u'Smoke',
-        721: u'Haze',
-        731: u'Sand, dust whirls',
-        741: u'Fog',
-        751: u'Sand',
-        761: u'Dust',
-        762: u'Volcanic ash',
-        771: u'Squalls',
-        781: u'Tornado',
-        800: u'Clear sky',
-        801: u'Few clouds',
-        802: u'Scattered clouds',
-        803: u'Broken clouds',
-        804: u'Overcast clouds',
-        900: u'Tornado',
-        901: u'Tropical storm',
-        902: u'Hurricane',
-        903: u'Cold',
-        904: u'Hot',
-        905: u'Windy',
-        906: u'Hail',
-        951: u'Calm',
-        952: u'Light breeze',
-        953: u'Gentle breeze',
-        954: u'Moderate breeze',
-        955: u'Fresh breeze',
-        956: u'Strong breeze',
-        957: u'High wind, near gale',
-        958: u'Gale',
-        959: u'Severe gale',
-        960: u'Storm',
-        961: u'Violent storm',
-        962: u'Hurricane'
+        200: "Thunderstorm with light rain",
+        201: "Thunderstorm with rain",
+        202: "Thunderstorm with heavy rain",
+        210: "Light thunderstorm",
+        211: "Thunderstorm",
+        212: "Heavy thunderstorm",
+        221: "Ragged thunderstorm",
+        230: "Thunderstorm with light drizzle",
+        231: "Thunderstorm with drizzle",
+        232: "Thunderstorm with heavy drizzle",
+        300: "Light intensity drizzle",
+        301: "Drizzle",
+        302: "Heavy intensity drizzle",
+        310: "Light intensity drizzle rain",
+        311: "Drizzle rain",
+        312: "Heavy intensity drizzle rain",
+        313: "Shower rain and drizzle",
+        314: "Heavy shower rain and drizzle",
+        321: "Shower drizzle",
+        500: "Light rain",
+        501: "Moderate rain",
+        502: "Heavy intensity rain",
+        503: "Very heavy rain",
+        504: "Extreme rain",
+        511: "Freezing rain",
+        520: "Light intensity shower rain",
+        521: "Shower rain",
+        522: "Heavy intensity shower rain",
+        531: "Ragged shower rain",
+        600: "Light snow",
+        601: "Snow",
+        602: "Heavy snow",
+        611: "Sleet",
+        612: "Shower sleet",
+        615: "Light rain and snow",
+        616: "Rain and snow",
+        620: "Light shower snow",
+        621: "Shower snow",
+        622: "Heavy shower snow",
+        701: "Mist",
+        711: "Smoke",
+        721: "Haze",
+        731: "Sand, dust whirls",
+        741: "Fog",
+        751: "Sand",
+        761: "Dust",
+        762: "Volcanic ash",
+        771: "Squalls",
+        781: "Tornado",
+        800: "Clear sky",
+        801: "Few clouds",
+        802: "Scattered clouds",
+        803: "Broken clouds",
+        804: "Overcast clouds",
+        900: "Tornado",
+        901: "Tropical storm",
+        902: "Hurricane",
+        903: "Cold",
+        904: "Hot",
+        905: "Windy",
+        906: "Hail",
+        951: "Calm",
+        952: "Light breeze",
+        953: "Gentle breeze",
+        954: "Moderate breeze",
+        955: "Fresh breeze",
+        956: "Strong breeze",
+        957: "High wind, near gale",
+        958: "Gale",
+        959: "Severe gale",
+        960: "Storm",
+        961: "Violent storm",
+        962: "Hurricane",
     }
-    OWM_WIND_DIRECTIONS = [u'N',u'NNE',u'NE',u'ENE',u'E',u'ESE',u'SE',u'SSE',u'S',u'SSW',u'SW',u'WSW',u'W',u'WNW',u'NW',u'NNW',u'N']
+    OWM_WIND_DIRECTIONS = [
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+        "N",
+    ]
 
     def __init__(self, bootstrap, debug_enabled):
         """
@@ -132,71 +149,73 @@ class Openweathermap(RaspIotModule):
             bootstrap (dict): bootstrap objects
             debug_enabled (bool): flag to set debug level to logger
         """
-        #init
-        RaspIotModule.__init__(self, bootstrap, debug_enabled)
+        # init
+        CleepModule.__init__(self, bootstrap, debug_enabled)
 
-        #members
+        # members
         self.weather_task = None
         self.__owm_uuid = None
         self.__forecast = []
         self.http = urllib3.PoolManager()
 
-        #events
-        self.openweathermap_weather_update = self._get_event('openweathermap.weather.update')
+        # events
+        self.openweathermap_weather_update = self._get_event(
+            "openweathermap.weather.update"
+        )
 
     def _configure(self):
         """
         Configure module
         """
-        #add openweathermap device
-        if self._get_device_count()==0:
+        # add openweathermap device
+        if self._get_device_count() == 0:
             owm = {
-                u'type': u'openweathermap',
-                u'name': u'OpenWeatherMap',
-                u'lastupdate': None,
-                u'celsius': None,
-                u'fahrenheit': None,
-                u'humidity': None,
-                u'pressure': None,
-                u'windspeed': None,
-                u'winddirection': None
+                "type": "openweathermap",
+                "name": "OpenWeatherMap",
+                "lastupdate": None,
+                "celsius": None,
+                "fahrenheit": None,
+                "humidity": None,
+                "pressure": None,
+                "windspeed": None,
+                "winddirection": None,
+                "code": None,
+                "condition": None,
+                "icon": None,
             }
             self._add_device(owm)
 
-        #get device uuid
+        # get device uuid
         devices = self.get_module_devices()
-        if len(devices)==1:
-            self.__owm_uuid = devices.keys()[0]
-        else:
-            #supposed to have only one device!
-            raise Exception(u'Openweathermap should handle only one device')
+        if len(devices) == 1:
+            self.__owm_uuid = list(devices.keys())[0]
 
-        #update weather conditions
-        self._force_weather_update(devices)
+    def _on_start(self):
+        """
+        Module starts
+        """
+        # update weather conditions
+        self._force_weather_update()
 
-        #start weather task
+        # start weather task
         self._start_weather_task()
 
-    def _stop(self):
+    def _on_stop(self):
         """
-        Stop module
+        Module stops
         """
         self._stop_weather_task()
 
-    def _force_weather_update(self, devices=None):
+    def _force_weather_update(self):
         """
         Force weather update according to last update to not flood owm api
-
-        Args:
-            devices (list): list of devices. Performance optim, optional
         """
-        #get devices if not provided
-        if devices is None:
-            devices = self.get_module_devices()
+        # get devices if not provided
+        devices = self.get_module_devices()
 
-        last_update = devices[self.__owm_uuid][u'lastupdate']
-        if last_update is None or last_update+self.OWM_PREVENT_FLOOD<time.time():
-            self.logger.debug(u'Update weather at startup')
+        last_update = devices[self.__owm_uuid]["lastupdate"]
+        if last_update is None or last_update + self.OWM_PREVENT_FLOOD < time.time():
+            self.logger.debug("Update weather at startup")
             self._weather_task()
 
     def _start_weather_task(self):
@@ -204,7 +223,9 @@ class Openweathermap(RaspIotModule):
         Start weather task
         """
         if self.weather_task is None:
-            self.weather_task = Task(self.OWM_TASK_DELAY, self._weather_task, self.logger)
+            self.weather_task = Task(
+                self.OWM_TASK_DELAY, self._weather_task, self.logger
+            )
             self.weather_task.start()
 
     def _stop_weather_task(self):
@@ -241,18 +262,18 @@ class Openweathermap(RaspIotModule):
         status = None
         resp_data = None
         try:
-            self.logger.debug(u'Request params: %s' % params)
-            resp = self.http.request('GET', url, fields=params)
-            resp_data = json.loads(resp.data.decode('utf-8'))
+            self.logger.debug("Request params: %s" % params)
+            resp = self.http.request("GET", url, fields=params)
+            resp_data = json.loads(resp.data.decode("utf-8"))
             status = resp.status
-            if status!=200:
-                self.logger.error(u'OWM api response [%s]: %s' % (status, resp_data))
+            if status != 200:
+                self.logger.error("OWM api response [%s]: %s" % (status, resp_data))
 
-        except:
-            self.logger.exception('Error while requesting requesting OWM API:')
+        except Exception:
+            self.logger.exception("Error while requesting requesting OWM API:")
 
         return (status, resp_data)
-    
+
     def _get_weather(self, apikey):
         """
         Get weather condition
@@ -267,32 +288,41 @@ class Openweathermap(RaspIotModule):
             InvalidParameter: if input parameter is invalid
             CommandError: if command failed
         """
-        #check parameter
-        if apikey is None or len(apikey)==0:
-            raise MissingParameter(u'Parameter "apikey" is missing')
+        # check parameter
+        if apikey is None or len(apikey) == 0:
+            raise MissingParameter('Parameter "apikey" is missing')
 
-        #get position infos from system module
-        resp = self.send_command(u'get_position', u'parameters')
-        self.logger.debug(u'Get position from parameters module resp: %s' % resp)
+        # get position infos from system module
+        resp = self.send_command("get_position", "parameters")
+        self.logger.debug("Get position from parameters module resp: %s" % resp)
         if not resp:
-            raise CommandError('No response from parameters module')
-        elif resp[u'error']:
-            raise CommandError(resp[u'message'])
-        position = resp[u'data']
+            raise CommandError("No response from parameters module")
+        if resp.error:
+            raise CommandError(resp.message)
+        position = resp.data
 
-        #request api
-        (status, resp) = self._owm_request(self.OWM_WEATHER_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
-        self.logger.debug(u'OWM response: %s' % (resp))
+        # request api
+        (status, resp) = self._owm_request(
+            self.OWM_WEATHER_URL,
+            {
+                "appid": apikey,
+                "lat": position["latitude"],
+                "lon": position["longitude"],
+                "units": "metric",
+                "mode": "json",
+            },
+        )
+        self.logger.debug("OWM response: %s" % (resp))
 
-        #handle errors
-        if status==401:
-            raise Exception(u'Invalid OWM api key')
-        elif status!=200:
-            raise Exception(u'Error requesting openweathermap api [%s]' % status)
-        if not isinstance(resp, dict) or u'cod' not in resp:
-            raise Exception(u'Invalid OWM api response format. Is API changed?')
-        elif resp[u'cod']!=200: #cod is int for weather request
-            raise Exception(resp[u'message'] if u'message' in resp else 'Unknown error')
+        # handle errors
+        if status == 401:
+            raise Exception("Invalid OWM api key")
+        if status != 200:
+            raise Exception("Error requesting openweathermap api [%s]" % status)
+        if not isinstance(resp, dict) or "cod" not in resp:
+            raise Exception("Invalid OWM api response format. Is API changed?")
+        if resp["cod"] != 200:  # cod is int for weather request
+            raise Exception(resp["message"] if "message" in resp else "Unknown error")
 
         return resp
 
@@ -310,36 +340,45 @@ class Openweathermap(RaspIotModule):
             InvalidParameter: if input parameter is invalid
             CommandError: if command failed
         """
-        #check parameter
-        if apikey is None or len(apikey)==0:
-            raise MissingParameter(u'Parameter "apikey" is missing')
+        # check parameter
+        if apikey is None or len(apikey) == 0:
+            raise MissingParameter('Parameter "apikey" is missing')
 
-        #get position infos from system module
-        resp = self.send_command(u'get_position', u'parameters')
-        self.logger.debug(u'Get position from parameters module resp: %s' % resp)
+        # get position infos from system module
+        resp = self.send_command("get_position", "parameters")
+        self.logger.debug("Get position from parameters module resp: %s" % resp)
         if not resp:
-            raise CommandError('No response from parameters module')
-        elif resp[u'error']:
-            raise CommandError(resp[u'message'])
-        position = resp[u'data']
+            raise CommandError("No response from parameters module")
+        if resp.error:
+            raise CommandError(resp.message)
+        position = resp.data
 
-        #request api
-        (status, resp) = self._owm_request(self.OWM_FORECAST_URL, {u'appid': apikey, u'lat': position[u'latitude'], u'lon': position[u'longitude'], u'units': u'metric', u'mode': u'json'})
-        self.logger.trace(u'OWM response: %s' % (resp))
+        # request api
+        (status, resp) = self._owm_request(
+            self.OWM_FORECAST_URL,
+            {
+                "appid": apikey,
+                "lat": position["latitude"],
+                "lon": position["longitude"],
+                "units": "metric",
+                "mode": "json",
+            },
+        )
+        self.logger.trace("OWM response: %s" % (resp))
 
-        #handle errors
-        if status==401:
-            raise Exception(u'Invalid OWM api key')
-        elif status!=200:
-            raise Exception(u'Error requesting openweathermap api [%s]' % status)
-        if u'cod' not in resp:
-            raise Exception(u'Invalid OWM api response format. Is API changed?')
-        elif resp[u'cod']!='200': #cod is string for forecast request
-            raise Exception(resp[u'message'] if u'message' in resp else 'Unknown error')
-        if u'list' not in resp:
-            raise Exception(u'No forecast data retrieved')
+        # handle errors
+        if status == 401:
+            raise Exception("Invalid OWM api key")
+        if status != 200:
+            raise Exception("Error requesting openweathermap api [%s]" % status)
+        if "cod" not in resp:
+            raise Exception("Invalid OWM api response format. Is API changed?")
+        if resp["cod"] != "200":  # cod is string for forecast request
+            raise Exception(resp["message"] if "message" in resp else "Unknown error")
+        if "list" not in resp:
+            raise Exception("No forecast data retrieved")
 
-        return resp[u'list']
+        return resp["list"]
 
     def _weather_task(self):
         """
@@ -362,73 +401,96 @@ class Openweathermap(RaspIotModule):
 
         """
         try:
-            self.logger.debug(u'Update weather conditions')
+            self.logger.debug("Update weather conditions")
 
             # get api key
             config = self._get_config()
-            if config[u'apikey'] is None or len(config[u'apikey']) == 0:
-                self.logger.debug('No apikey configured')
+            if config["apikey"] is None or len(config["apikey"]) == 0:
+                self.logger.debug("No apikey configured")
                 return
 
             # apikey configured, get weather
-            weather = self._get_weather(config[u'apikey'])
-            self.logger.trace('Weather: %s' % weather)
-            self.__forecast = self._get_forecast(config[u'apikey'])
+            weather = self._get_weather(config["apikey"])
+            self.logger.debug("Weather: %s" % weather)
+            self.__forecast = self._get_forecast(config["apikey"])
+            self.logger.debug("Forecast: %s" % self.__forecast)
 
             # save current weather conditions
             device = self._get_devices()[self.__owm_uuid]
-            device[u'lastupdate'] = int(time.time())
-            if weather.has_key(u'weather') and len(weather[u'weather'])>0:
-                if weather[u'weather'][0].has_key(u'icon'):
-                    device[u'icon'] = u'http://openweathermap.org/img/w/%s.png' % weather[u'weather'][0][u'icon']
+            device["lastupdate"] = int(time.time())
+            if "weather" in weather and len(weather["weather"]) > 0:
+                if "icon" in weather["weather"][0]:
+                    device["icon"] = (
+                        self.OWM_ICON_URL
+                        % weather["weather"][0]["icon"]
+                    )
                 else:
-                    device[u'icon'] = null
-                if weather[u'weather'][0].has_key(u'id'):
-                    device[u'condition'] = self.OWM_WEATHER_CODES[weather[u'weather'][0][u'id']]
-                    device[u'code'] = int(weather[u'weather'][0][u'id'])
+                    device["icon"] = None
+                self.logger.debug('=====> %s' % weather["weather"][0])
+                if "id" in weather["weather"][0]:
+                    device["condition"] = self.OWM_WEATHER_CODES[
+                        weather["weather"][0]["id"]
+                    ]
+                    device["code"] = int(weather["weather"][0]["id"])
                 else:
-                    device[u'condition'] = None
-                    device[u'code'] = None
-            if weather.has_key(u'main'):
-                if weather[u'main'].has_key(u'temp'):
-                    device[u'celsius'] = weather[u'main'][u'temp']
-                    device[u'fahrenheit'] = weather[u'main'][u'temp'] * 9.0 / 5.0  + 32.0
+                    device["condition"] = None
+                    device["code"] = None
+            if "main" in weather:
+                if "temp" in weather["main"]:
+                    device["celsius"] = weather["main"]["temp"]
+                    device["fahrenheit"] = weather["main"]["temp"] * 9.0 / 5.0 + 32.0
                 else:
-                    device[u'celsius'] = None
-                    device[u'fahrenheit'] = None
-                if weather[u'main'].has_key(u'pressure'):
-                    device[u'pressure'] = weather[u'main'][u'pressure']
+                    device["celsius"] = None
+                    device["fahrenheit"] = None
+                if "pressure" in weather["main"]:
+                    device["pressure"] = weather["main"]["pressure"]
                 else:
-                    device[u'pressure'] = None
-                if weather[u'main'].has_key(u'humidity'):
-                    device[u'humidity'] = weather[u'main'][u'humidity']
+                    device["pressure"] = None
+                if "humidity" in weather["main"]:
+                    device["humidity"] = weather["main"]["humidity"]
                 else:
-                    device[u'humidity'] = None
-            if weather.has_key('wind'):
-                if weather[u'wind'].has_key(u'speed'):
-                    device[u'windspeed'] = weather[u'wind'][u'speed']
+                    device["humidity"] = None
+            if "wind" in weather:
+                if "speed" in weather["wind"]:
+                    device["windspeed"] = weather["wind"]["speed"]
                 else:
-                    device[u'windspeed'] = None
-                if weather[u'wind'].has_key('deg'):
-                    device[u'winddegrees'] = weather[u'wind'][u'deg']
-                    index = int(round( (weather[u'wind'][u'deg'] % 360) / 22.5) + 1)
-                    if index>=17:
+                    device["windspeed"] = None
+                if "deg" in weather["wind"]:
+                    device["winddegrees"] = weather["wind"]["deg"]
+                    index = int(round((weather["wind"]["deg"] % 360) / 22.5) + 1)
+                    if index >= 17:
                         index = 0
-                    device[u'winddirection'] = self.OWM_WIND_DIRECTIONS[index]
+                    device["winddirection"] = self.OWM_WIND_DIRECTIONS[index]
                 else:
-                    device[u'winddegrees'] = None
-                    device[u'winddirection'] = None
+                    device["winddegrees"] = None
+                    device["winddirection"] = None
+            self.logger.debug('++++++ %s' % device)
             self._update_device(self.__owm_uuid, device)
 
             # and emit event
-            event_keys = [u'icon', u'condition', u'code', u'celsius', u'fahrenheit', u'pressure', u'humidity', u'windspeed', u'winddegrees', u'winddirection', u'lastupdate']
-            self.openweathermap_weather_update.send(params={k:v for k,v in device.items() if k in event_keys}, device_id=self.__owm_uuid)
+            event_keys = [
+                "icon",
+                "condition",
+                "code",
+                "celsius",
+                "fahrenheit",
+                "pressure",
+                "humidity",
+                "windspeed",
+                "winddegrees",
+                "winddirection",
+                "lastupdate",
+            ]
+            self.openweathermap_weather_update.send(
+                params={k: v for k, v in device.items() if k in event_keys},
+                device_id=self.__owm_uuid,
+            )
 
-        except Exception as e:
-            self.logger.exception(u'Exception during weather task:')
+        except Exception:
+            self.logger.exception("Exception during weather task:")
 
     def set_apikey(self, apikey):
-        """ 
+        """
         Set openweathermap apikey
 
         Args:
@@ -440,20 +502,18 @@ class Openweathermap(RaspIotModule):
         Raises:
             CommandError: if error occured while using apikey to get current weather
         """
-        if apikey is None or len(apikey)==0:
-            raise MissingParameter(u'Parameter "apikey" is missing')
+        if apikey is None or len(apikey) == 0:
+            raise MissingParameter('Parameter "apikey" is missing')
 
-        #test apikey (should raise exception if error)
+        # test apikey (should raise exception if error)
         self._get_weather(apikey)
 
-        #test succeed, update weather right now and restart task
+        # test succeed, update weather right now and restart task
         self._restart_weather_task()
         self._force_weather_update()
 
-        #save config
-        return self._update_config({
-            u'apikey': apikey
-        })
+        # save config
+        return self._update_config({"apikey": apikey})
 
     def get_weather(self):
         """
@@ -468,10 +528,9 @@ class Openweathermap(RaspIotModule):
     def get_forecast(self):
         """
         Return last forecast information.
-        May be empty if raspiot just restarted.
+        May be empty if cleep just restarted.
 
         Returns:
             list: list of forecast data (every 3 hours)
         """
         return self.__forecast
-

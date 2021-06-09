@@ -2,21 +2,22 @@
  * OpenWeatherMap config directive
  * Handle openweathermap configuration
  */
-var openweathermapConfigDirective = function(toast, openweathermapService, raspiotService) {
+angular
+.module('Cleep')
+.directive('openweathermapConfigComponent', ['toastService', 'openweathermapService', 'cleepService',
+function(toast, openweathermapService, cleepService) {
 
-    var openweathermapController = function()
-    {
+    var openweathermapController = function() {
         var self = this;
         self.apikey = '';
 
         /**
          * Set api key
          */
-        self.setApikey = function()
-        {
+        self.setApikey = function() {
             openweathermapService.setApikey(self.apikey)
                 .then(function(resp) {
-                    return raspiotService.reloadModuleConfig('openweathermap');
+                    return cleepService.reloadModuleConfig('openweathermap');
                 })
                 .then(function(config) {
                     self.apikey = config.apikey;
@@ -27,18 +28,13 @@ var openweathermapConfigDirective = function(toast, openweathermapService, raspi
         /**
          * Init controller
          */
-        self.init = function()
-        {
-            raspiotService.getModuleConfig('openweathermap')
+        self.$onInit = function() {
+            cleepService.getModuleConfig('openweathermap')
                 .then(function(config) {
                     self.apikey = config.apikey;
                 });
         };
 
-    };
-
-    var openweathermapLink = function(scope, element, attrs, controller) {
-        controller.init();
     };
 
     return {
@@ -47,10 +43,6 @@ var openweathermapConfigDirective = function(toast, openweathermapService, raspi
         scope: true,
         controller: openweathermapController,
         controllerAs: 'openweathermapCtl',
-        link: openweathermapLink
     };
-};
-
-var RaspIot = angular.module('RaspIot');
-RaspIot.directive('openweathermapConfigDirective', ['toastService', 'openweathermapService', 'raspiotService', openweathermapConfigDirective])
+}]);
 

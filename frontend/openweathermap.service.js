@@ -2,7 +2,10 @@
  * OpenWeatherMap service
  * Handle openweathermap module requests
  */
-var openweathermapService = function($q, $rootScope, rpcService, raspiotService) {
+angular
+.module('Cleep')
+.service('openweathermapService', ['$q', '$rootScope', 'rpcService', 'cleepService',
+function($q, $rootScope, rpcService, cleepService) {
     var self = this;
 
     self.setApikey = function(apikey) {
@@ -17,29 +20,5 @@ var openweathermapService = function($q, $rootScope, rpcService, raspiotService)
         return rpcService.sendCommand('get_forecast', 'openweathermap', {});
     };
 
-    /**
-     * Catch openweathermap event
-     */
-    $rootScope.$on('openweathermap.weather.update', function(event, uuid, params) {
-
-        for( var i=0; i<raspiotService.devices.length; i++ )
-        {   
-            if( raspiotService.devices[i].uuid===uuid )
-            {   
-                raspiotService.devices[i].lastupdate = params.lastupdate;
-                raspiotService.devices[i].celsius = params.celsius;
-                raspiotService.devices[i].fahrenheit = params.fahrenheit;
-                raspiotService.devices[i].humidity = params.humidity;
-                raspiotService.devices[i].pressure = params.pressure;
-                raspiotService.devices[i].wind_speed = params.windspeed;
-                raspiotService.devices[i].wind_direction = params.winddirection;
-                break;
-            }   
-        }   
-    });
-
-};
-    
-var RaspIot = angular.module('RaspIot');
-RaspIot.service('openweathermapService', ['$q', '$rootScope', 'rpcService', 'raspiotService', openweathermapService]);
+}]);
 

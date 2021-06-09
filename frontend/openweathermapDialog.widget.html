@@ -1,6 +1,6 @@
 <md-dialog aria-label="Openweather dialog" flex="50">
 
-    <form ng-cloak>
+    <form>
 
         <md-toolbar>
             <div class="md-toolbar-tools">
@@ -41,9 +41,9 @@
                         </div>
                         <div>
                             <md-icon md-svg-icon="weather-windy" class="icon-md">
-                                <md-tooltip>Wind (direction {{owmCtl.device.wind_direction}})</md-tooltip>
+                                <md-tooltip>Wind (direction {{owmCtl.device.winddirection}})</md-tooltip>
                             </md-icon>
-                            <span>{{owmCtl.device.wind_speed}}m/s {{owmCtl.device.wind_direction}}</span>
+                            <span>{{owmCtl.device.windspeed}}m/s {{owmCtl.device.winddirection}}</span>
                         </div>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                 <md-progress-circular md-mode="indeterminate"></md-progress-circular>
             </div>
             <div ng-if="!owmCtl.loading">
-                <nvd3 options='owmCtl.graphOptions' data='owmCtl.forecastData'></nvd3>
+                <nvd3 options="owmCtl.graphOptions" data="owmCtl.forecastData"></nvd3>
             </div>
             <div layout="row">
                 <div flex></div>
