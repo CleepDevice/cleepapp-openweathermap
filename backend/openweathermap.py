@@ -22,7 +22,7 @@ class Openweathermap(CleepModule):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.1.0"
+    MODULE_VERSION = "1.2.0"
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
     MODULE_DESCRIPTION = "Gets weather conditions using OpenWeatherMap service"
@@ -32,7 +32,6 @@ class Openweathermap(CleepModule):
         "This application also broadcasts weather event on all your devices."
     )
     MODULE_TAGS = ["weather", "forecast"]
-    MODULE_COUNTRY = None
     MODULE_URLINFO = "https://github.com/tangb/cleepadd-openweathermap"
     MODULE_URLHELP = "https://github.com/tangb/cleepadd-openweathermap/wiki"
     MODULE_URLSITE = "https://openweathermap.org/"
