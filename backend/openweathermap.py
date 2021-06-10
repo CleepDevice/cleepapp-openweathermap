@@ -3,7 +3,7 @@
 
 import json
 import time
-import urllib3
+import requests
 from cleep.exception import CommandError, MissingParameter
 from cleep.libs.internals.task import Task
 from cleep.core import CleepModule
@@ -41,9 +41,9 @@ class Openweathermap(CleepModule):
     MODULE_CONFIG_FILE = "openweathermap.conf"
     DEFAULT_CONFIG = {"apikey": None}
 
-    OWM_WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
-    OWM_FORECAST_URL = "http://api.openweathermap.org/data/2.5/forecast"
-    OWM_ICON_URL = "http://openweathermap.org/img/w/%s.png"
+    OWM_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
+    OWM_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
+    OWM_ICON_URL = "https://openweathermap.org/img/wn/%s.png"
     OWM_TASK_DELAY = 900
     OWM_PREVENT_FLOOD = 15
     OWM_WEATHER_CODES = {
@@ -156,7 +156,6 @@ class Openweathermap(CleepModule):
         self.weather_task = None
         self.__owm_uuid = None
         self.__forecast = []
-        self.http = urllib3.PoolManager()
 
         # events
         self.openweathermap_weather_update = self._get_event(
@@ -187,8 +186,7 @@ class Openweathermap(CleepModule):
 
         # get device uuid
         devices = self.get_module_devices()
-        if len(devices) == 1:
-            self.__owm_uuid = list(devices.keys())[0]
+        self.__owm_uuid = list(devices.keys())[0]
 
     def _on_start(self):
         """
@@ -213,9 +211,8 @@ class Openweathermap(CleepModule):
         # get devices if not provided
         devices = self.get_module_devices()
 
-        last_update = devices[self.__owm_uuid]["lastupdate"]
+        last_update = devices[self.__owm_uuid].get("lastupdate")
         if last_update is None or last_update + self.OWM_PREVENT_FLOOD < time.time():
-            self.logger.debug("Update weather at startup")
             self._weather_task()
 
     def _start_weather_task(self):
@@ -263,14 +260,15 @@ class Openweathermap(CleepModule):
         resp_data = None
         try:
             self.logger.debug("Request params: %s" % params)
-            resp = self.http.request("GET", url, fields=params)
-            resp_data = json.loads(resp.data.decode("utf-8"))
-            status = resp.status
+            resp = requests.get(url, data=params)
+            resp_data = resp.json()
+            self.logger.debug("Response data: %s" % resp_data)
+            status = resp.status_code
             if status != 200:
                 self.logger.error("OWM api response [%s]: %s" % (status, resp_data))
 
         except Exception:
-            self.logger.exception("Error while requesting requesting OWM API:")
+            self.logger.exception("Error while requesting OWM API:")
 
         return (status, resp_data)
 
@@ -289,16 +287,17 @@ class Openweathermap(CleepModule):
             CommandError: if command failed
         """
         # check parameter
-        if apikey is None or len(apikey) == 0:
-            raise MissingParameter('Parameter "apikey" is missing')
+        self._check_parameters([{"name": "apikey", "value": apikey, "type": str}])
 
-        # get position infos from system module
+        # get position infos from parameters app
         resp = self.send_command("get_position", "parameters")
         self.logger.debug("Get position from parameters module resp: %s" % resp)
-        if not resp:
-            raise CommandError("No response from parameters module")
-        if resp.error:
-            raise CommandError(resp.message)
+        if not resp or resp.error:
+            raise Exception(
+                "Unable to get device position (%s)" % resp.error
+                if resp
+                else "No response"
+            )
         position = resp.data
 
         # request api
@@ -318,11 +317,13 @@ class Openweathermap(CleepModule):
         if status == 401:
             raise Exception("Invalid OWM api key")
         if status != 200:
-            raise Exception("Error requesting openweathermap api [%s]" % status)
+            raise Exception("Error requesting openweathermap api (status %s)" % status)
         if not isinstance(resp, dict) or "cod" not in resp:
             raise Exception("Invalid OWM api response format. Is API changed?")
         if resp["cod"] != 200:  # cod is int for weather request
-            raise Exception(resp["message"] if "message" in resp else "Unknown error")
+            raise Exception(
+                resp["message"] if "message" in resp else "Unknown error from api"
+            )
 
         return resp
 
@@ -341,16 +342,17 @@ class Openweathermap(CleepModule):
             CommandError: if command failed
         """
         # check parameter
-        if apikey is None or len(apikey) == 0:
-            raise MissingParameter('Parameter "apikey" is missing')
+        self._check_parameters([{"name": "apikey", "value": apikey, "type": str}])
 
-        # get position infos from system module
+        # get position infos from parameters app
         resp = self.send_command("get_position", "parameters")
         self.logger.debug("Get position from parameters module resp: %s" % resp)
-        if not resp:
-            raise CommandError("No response from parameters module")
-        if resp.error:
-            raise CommandError(resp.message)
+        if not resp or resp.error:
+            raise Exception(
+                "Unable to get device position (%s)" % resp.error
+                if resp
+                else "No response"
+            )
         position = resp.data
 
         # request api
@@ -370,12 +372,16 @@ class Openweathermap(CleepModule):
         if status == 401:
             raise Exception("Invalid OWM api key")
         if status != 200:
-            raise Exception("Error requesting openweathermap api [%s]" % status)
+            raise Exception("Error requesting openweathermap api (status %s)" % status)
         if "cod" not in resp:
             raise Exception("Invalid OWM api response format. Is API changed?")
         if resp["cod"] != "200":  # cod is string for forecast request
-            raise Exception(resp["message"] if "message" in resp else "Unknown error")
-        if "list" not in resp:
+            raise Exception(
+                "API message: %s" % resp["message"]
+                if "message" in resp
+                else "Unknown error from api"
+            )
+        if "list" not in resp or len(resp["list"]) == 0:
             raise Exception("No forecast data retrieved")
 
         return resp["list"]
@@ -383,7 +389,7 @@ class Openweathermap(CleepModule):
     def _weather_task(self):
         """
         Weather task in charge to refresh weather condition every hours
-        Send event with data::
+        Send openweathermap.weather.update event with following data::
 
             {
                 lastupdate (int): timestamp,
@@ -419,50 +425,39 @@ class Openweathermap(CleepModule):
             device = self._get_devices()[self.__owm_uuid]
             device["lastupdate"] = int(time.time())
             if "weather" in weather and len(weather["weather"]) > 0:
-                if "icon" in weather["weather"][0]:
-                    device["icon"] = (
-                        self.OWM_ICON_URL
-                        % weather["weather"][0]["icon"]
-                    )
-                else:
-                    device["icon"] = None
-                if "id" in weather["weather"][0]:
-                    device["condition"] = self.OWM_WEATHER_CODES[
-                        weather["weather"][0]["id"]
-                    ]
-                    device["code"] = int(weather["weather"][0]["id"])
-                else:
-                    device["condition"] = None
-                    device["code"] = None
+                icon = weather["weather"][0].get("icon")
+                device["icon"] = self.OWM_ICON_URL % icon or "unknown"
+                wid = weather["weather"][0].get("id")
+                device["condition"] = self.OWM_WEATHER_CODES[wid] if wid else "?"
+                device["code"] = int(wid) if wid else 0
+            else:
+                device["icon"] = self.OWM_ICON_URL % "unknown"
+                device["condition"] = "?"
+                device["code"] = 0
             if "main" in weather:
-                if "temp" in weather["main"]:
-                    device["celsius"] = weather["main"]["temp"]
-                    device["fahrenheit"] = weather["main"]["temp"] * 9.0 / 5.0 + 32.0
-                else:
-                    device["celsius"] = None
-                    device["fahrenheit"] = None
-                if "pressure" in weather["main"]:
-                    device["pressure"] = weather["main"]["pressure"]
-                else:
-                    device["pressure"] = None
-                if "humidity" in weather["main"]:
-                    device["humidity"] = weather["main"]["humidity"]
-                else:
-                    device["humidity"] = None
+                device["celsius"] = weather["main"].get("temp", 0.0)
+                device["fahrenheit"] = (
+                    weather["main"].get("temp", 0.0) * 9.0 / 5.0 + 32.0
+                )
+                device["pressure"] = weather["main"].get("pressure", 0.0)
+                device["humidity"] = weather["main"].get("humidity", 0.0)
+            else:
+                device["celsius"] = 0.0
+                device["fahrenheit"] = 0.0
+                device["pressure"] = 0.0
+                device["humidity"] = 0.0
             if "wind" in weather:
-                if "speed" in weather["wind"]:
-                    device["windspeed"] = weather["wind"]["speed"]
-                else:
-                    device["windspeed"] = None
-                if "deg" in weather["wind"]:
-                    device["winddegrees"] = weather["wind"]["deg"]
-                    index = int(round((weather["wind"]["deg"] % 360) / 22.5) + 1)
-                    if index >= 17:
-                        index = 0
-                    device["winddirection"] = self.OWM_WIND_DIRECTIONS[index]
-                else:
-                    device["winddegrees"] = None
-                    device["winddirection"] = None
+                device["windspeed"] = weather["wind"].get("speed", 0.0)
+                device["winddegrees"] = weather["wind"].get("deg", 0)
+                index = int(round((weather["wind"].get("deg", 0) % 360) / 22.5) + 1)
+                device["winddirection"] = self.OWM_WIND_DIRECTIONS[
+                    0 if index >= 17 else index
+                ]
+            else:
+                device["windspeed"] = 0.0
+                device["winddegrees"] = 0.0
+                device["winddirection"] = "N"
+
             self._update_device(self.__owm_uuid, device)
 
             # and emit event
@@ -500,8 +495,7 @@ class Openweathermap(CleepModule):
         Raises:
             CommandError: if error occured while using apikey to get current weather
         """
-        if apikey is None or len(apikey) == 0:
-            raise MissingParameter('Parameter "apikey" is missing')
+        self._check_parameters([{"name": "apikey", "value": apikey, "type": str}])
 
         # test apikey (should raise exception if error)
         self._get_weather(apikey)

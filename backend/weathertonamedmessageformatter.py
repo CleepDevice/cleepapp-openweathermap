@@ -109,20 +109,21 @@ class WeatherToNamedMessageFormatter(ProfileFormatter):
         profile.message = ""
 
         # append icon
-        if event_values.has_key("code") and event_values["code"] in self.CODES.keys():
+        if "code" in event_values and event_values["code"] in self.CODES.keys():
             profile.message += "%s " % self.CODES[event_values["code"]]
 
         # append current weather conditions
-        if event_values.has_key("condition"):
+        if "condition" in event_values:
             profile.message += event_values["condition"]
 
         # append current temperature
-        if event_values.has_key("celsius"):
+        if "celsius" in event_values:
             profile.message += " %s%sC" % (event_values["celsius"], "\N{DEGREE SIGN}")
-        elif event_values.has_key("fahrenheit"):
+        elif "fahrenheit" in event_values:
             profile.message += " %s%sF" % (
                 event_values["fahrenheit"],
                 "\N{DEGREE SIGN}",
             )
 
         return profile
+

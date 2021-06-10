@@ -116,8 +116,8 @@ function($mdDialog, $q, openweathermapService) {
                     bottom: 30,
                     left: 60
                 },
-                x: function(d){return d[0];},
-                y: function(d){return d[1];},
+                x: function(d){return d && d[0] || 0;},
+                y: function(d){return d && d[1] || 0;},
                 useVoronoi: false,
                 clipEdge: true,
                 duration: 500,
