@@ -4,11 +4,15 @@ This application connects to OpenWeatherMap online service to retrieve current w
 
 Data is refreshed automatically every 15 minutes.
 
-It adds a new widget on your device dashboard
+It adds a new widget on your device dashboard:
+
+![Dashboard widget](https://raw.githubusercontent.com/tangb/cleepapp-openweathermap/master/resources/dashboard.jpg)
 
 ## Charts
 
-If charts application is installed, it also can display forecast for next 5 days (temperature, humidity, pressure and wind)
+If charts application is installed, it can display forecast for next 5 days (temperature, humidity, pressure and wind)
+
+![Forecast dialog](https://raw.githubusercontent.com/tangb/cleepapp-openweathermap/master/resources/forecast.jpg)
 
 ## Configuration
 
