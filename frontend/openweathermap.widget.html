@@ -18,7 +18,7 @@
             <span class="md-display-1">{{widgetCtl.device.celsius | temperature:'celsius'}}</span>
         </div>
     </md-card-content>
-    <md-card-actions layout="column" layout-align="start">
+    <md-card-actions layout="column" layout-align="start" ng-if="widgetCtl.hasCharts">
         <md-button ng-click="widgetCtl.openDialog()" class="md-raised">Detailed infos</md-button>
     </md-card-actions>
     <md-card-footer>

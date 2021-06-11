@@ -5,12 +5,13 @@
  */
 angular
 .module('Cleep')
-.directive('openweathermapWidget', ['$mdDialog', '$q', 'openweathermapService',
-function($mdDialog, $q, openweathermapService) {
+.directive('openweathermapWidget', ['$mdDialog', '$q', 'openweathermapService', 'cleepService',
+function($mdDialog, $q, openweathermapService, cleepService) {
 
     var widgetOpenweathermapController = ['$scope', function($scope) {
         var self = this;
         self.device = $scope.device;
+        self.hasCharts = cleepService.isAppInstalled('charts');
         self.loading = true;
         self.selection = 'Temperature';
         self.unit = null;
