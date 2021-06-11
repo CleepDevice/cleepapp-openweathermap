@@ -22,7 +22,7 @@ class Openweathermap(CleepModule):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.2.0"
+    MODULE_VERSION = "1.2.1"
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
     MODULE_DESCRIPTION = "Gets weather conditions using OpenWeatherMap service"

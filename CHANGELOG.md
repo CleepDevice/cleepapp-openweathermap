@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.1 - 2021-06-11
+
+* Handle charts app
+
 ## v1.2.0 - 2021-06-10
 
 * Migrate to python3
