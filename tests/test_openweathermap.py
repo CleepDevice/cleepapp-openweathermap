@@ -256,9 +256,6 @@ class TestOpenweathermap(unittest.TestCase):
             'http://url.com',
             body=json.dumps(params),
             status=200,
-            match=[
-                responses.urlencoded_params_matcher({"apikey": "dummy"})
-            ]
         )
 
         resp = self.module._owm_request('http://url.com', params)
@@ -276,9 +273,6 @@ class TestOpenweathermap(unittest.TestCase):
             'http://url.com',
             body=json.dumps(params),
             status=404,
-            match=[
-                responses.urlencoded_params_matcher({"apikey": "dummy"})
-            ]
         )
 
         resp = self.module._owm_request('http://url.com', params)
@@ -703,6 +697,6 @@ class TestsOpenweathermapWeatherUpdateEvent(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # coverage run --omit="*/lib/python*/*","test_*" --concurrency=thread test_teleinfo.py; coverage report -m -i
+    # coverage run --omit="*/lib/python*/*","test_*" --concurrency=thread test_openweathermap.py; coverage report -m -i
     unittest.main()
 

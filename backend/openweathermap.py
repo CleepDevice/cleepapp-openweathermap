@@ -22,7 +22,7 @@ class Openweathermap(CleepModule):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.2.1"
+    MODULE_VERSION = "1.2.2"
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
     MODULE_DESCRIPTION = "Gets weather conditions using OpenWeatherMap service"
@@ -32,10 +32,10 @@ class Openweathermap(CleepModule):
         "This application also broadcasts weather event on all your devices."
     )
     MODULE_TAGS = ["weather", "forecast"]
-    MODULE_URLINFO = "https://github.com/tangb/cleepadd-openweathermap"
-    MODULE_URLHELP = "https://github.com/tangb/cleepadd-openweathermap/wiki"
+    MODULE_URLINFO = "https://github.com/tangb/cleepapp-openweathermap"
+    MODULE_URLHELP = None
     MODULE_URLSITE = "https://openweathermap.org/"
-    MODULE_URLBUGS = "https://github.com/tangb/cleepadd-openweathermap/issues"
+    MODULE_URLBUGS = "https://github.com/tangb/cleepapp-openweathermap/issues"
 
     MODULE_CONFIG_FILE = "openweathermap.conf"
     DEFAULT_CONFIG = {"apikey": None}
@@ -259,7 +259,7 @@ class Openweathermap(CleepModule):
         resp_data = None
         try:
             self.logger.debug("Request params: %s" % params)
-            resp = requests.get(url, data=params)
+            resp = requests.get(url, params=params)
             resp_data = resp.json()
             self.logger.debug("Response data: %s" % resp_data)
             status = resp.status_code
