@@ -95,18 +95,7 @@ function($mdDialog, $q, openweathermapService, cleepService) {
             961: 'thunderstorm',
             962: 'cloudy-gusts'
         };
-        /*self.customTimeFormat = d3.time.format.multi([
-            ["%H:%M", function(d) { return d.getMinutes(); }], 
-            ["%H", function(d) { return d.getHours(); }], 
-            ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }], 
-            ["%b %d", function(d) { return d.getDate() != 1; }], 
-            ["%B", function(d) { return d.getMonth(); }], 
-            ["%Y", function() { return true; }]
-        ]);*/
-        self.customTimeFormat = d3.time.format.multi([
-            ["%a %H:%M", function(d) { return d.getMinutes(); }], 
-            ["%a %H:%M", function() { return true; }]
-        ]);
+        self.customTimeFormat = []; // var configured when opening dialog
         self.graphOptions = {
             chart: {
                 type: 'stackedAreaChart',
@@ -262,6 +251,14 @@ function($mdDialog, $q, openweathermapService, cleepService) {
         self.openDialog = function() {
             self.loading = true;
             self.forecastData.splice(0, self.forecastData.length);
+
+            // set custom time format here due to possibly missing d3 library
+            // (charts app not installed)
+            self.customTimeFormat = d3.time.format.multi([
+                ["%a %H:%M", function(d) { return d.getMinutes(); }], 
+                ["%a %H:%M", function() { return true; }]
+            ]);
+
             $mdDialog.show({
                 controller: function() { return self; },
                 controllerAs: 'owmCtl',
@@ -270,7 +267,7 @@ function($mdDialog, $q, openweathermapService, cleepService) {
                 clickOutsideToClose: true,
                 onComplete: self.loadDialogData,
                 onRemoving: () => {
-                    // workaround to remove tooltips when dialog is closed: dialog is closed before 
+                    // workaround to remove tooltips when dialog is closed: dialog is closed before
                     // nvd3 has time to remove tooltips elements
                     var tooltips = $("div[id^='nvtooltip']");
                     for( var i=0; i<tooltips.length; i++ ) {
