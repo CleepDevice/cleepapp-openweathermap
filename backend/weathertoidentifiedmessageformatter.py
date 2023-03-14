@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from cleep.libs.internals.profileformatter import ProfileFormatter
-from cleep.profiles.namedmessageprofile import NamedMessageProfile
+from cleep.profiles.identifiedmessageprofile import IdentifiedMessageProfile
 
 
-class WeatherToNamedMessageFormatter(ProfileFormatter):
+class WeatherToIdentifiedMessageFormatter(ProfileFormatter):
     """
-    Openweathermap data to NamedMessageProfile
+    Openweathermap data to IdentifiedMessageProfile
     """
 
     CODES = {
@@ -94,36 +94,37 @@ class WeatherToNamedMessageFormatter(ProfileFormatter):
             params (dict): formatter parameters
         """
         ProfileFormatter.__init__(
-            self, params, "openweathermap.weather.update", NamedMessageProfile()
+            self, params, "openweathermap.weather.update", IdentifiedMessageProfile()
         )
 
-    def _fill_profile(self, event_values, profile):
+    def _fill_profile(self, event_params, profile):
         """
         Fill profile with event data
 
         Args:
-            event_values (dict): event values
+            event_params (dict): event parameters
             profile (Profile): profile instance
         """
-        profile.name = "openweathermap"
+        profile.id = "openweathermap"
         profile.message = ""
 
         # append icon
-        if "code" in event_values and event_values["code"] in self.CODES.keys():
-            profile.message += "%s " % self.CODES[event_values["code"]]
+        if "code" in event_params and event_params["code"] in self.CODES:
+            profile.message += f"{self.CODES[event_params['code']]} "
 
         # append current weather conditions
-        if "condition" in event_values:
-            profile.message += event_values["condition"]
+        if "condition" in event_params:
+            profile.message += event_params["condition"]
 
         # append current temperature
-        if "celsius" in event_values:
-            profile.message += " %s%sC" % (event_values["celsius"], "\N{DEGREE SIGN}")
-        elif "fahrenheit" in event_values:
-            profile.message += " %s%sF" % (
-                event_values["fahrenheit"],
-                "\N{DEGREE SIGN}",
-            )
+        temp = "?"
+        unit = "C"
+        if "celsius" in event_params:
+            temp = event_params["celsius"]
+            unit = "C"
+        elif "fahrenheit" in event_params:
+            temp = event_params["fahrenheit"]
+            unit = "F"
+        profile.message += f" {temp}\N{DEGREE SIGN}{unit}"
 
         return profile
-

@@ -3,6 +3,7 @@
 
 from cleep.libs.internals.event import Event
 
+
 class OpenweathermapWeatherUpdateEvent(Event):
     """
     Openweathermap.weather.update event

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.4] - 2023-03-14
+###
+- Improve code quality (lint+black)
+
 ## [1.2.3] - 2022-02-03
 ### Fixed
 - Fix missing D3 library which is no longer part of core

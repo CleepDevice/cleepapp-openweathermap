@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
 import time
 import requests
-from cleep.exception import CommandError, MissingParameter
 from cleep.libs.internals.task import Task
 from cleep.core import CleepModule
 from cleep.common import CATEGORIES
@@ -22,7 +20,7 @@ class Openweathermap(CleepModule):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.2.3"
+    MODULE_VERSION = "1.2.4"
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
     MODULE_DESCRIPTION = "Gets weather conditions using OpenWeatherMap service"
@@ -32,17 +30,17 @@ class Openweathermap(CleepModule):
         "This application also broadcasts weather event on all your devices."
     )
     MODULE_TAGS = ["weather", "forecast"]
-    MODULE_URLINFO = "https://github.com/tangb/cleepapp-openweathermap"
+    MODULE_URLINFO = "https://github.com/CleepDevice/cleepapp-openweathermap"
     MODULE_URLHELP = None
     MODULE_URLSITE = "https://openweathermap.org/"
-    MODULE_URLBUGS = "https://github.com/tangb/cleepapp-openweathermap/issues"
+    MODULE_URLBUGS = "https://github.com/CleepDevice/cleepapp-openweathermap/issues"
 
     MODULE_CONFIG_FILE = "openweathermap.conf"
     DEFAULT_CONFIG = {"apikey": None}
 
     OWM_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
     OWM_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
-    OWM_ICON_URL = "https://openweathermap.org/img/wn/%s.png"
+    OWM_ICON_URL = "https://openweathermap.org/img/wn/{0}.png"
     OWM_TASK_DELAY = 900
     OWM_PREVENT_FLOOD = 15
     OWM_WEATHER_CODES = {
@@ -258,13 +256,13 @@ class Openweathermap(CleepModule):
         status = None
         resp_data = None
         try:
-            self.logger.debug("Request params: %s" % params)
+            self.logger.debug("Request params: %s", params)
             resp = requests.get(url, params=params)
             resp_data = resp.json()
-            self.logger.debug("Response data: %s" % resp_data)
+            self.logger.debug("Response data: %s", resp_data)
             status = resp.status_code
             if status != 200:
-                self.logger.error("OWM api response [%s]: %s" % (status, resp_data))
+                self.logger.error("OWM api response [%s]: %s", status, resp_data)
 
         except Exception:
             self.logger.exception("Error while requesting OWM API:")
@@ -290,13 +288,10 @@ class Openweathermap(CleepModule):
 
         # get position infos from parameters app
         resp = self.send_command("get_position", "parameters")
-        self.logger.debug("Get position from parameters module resp: %s" % resp)
+        self.logger.debug("Get position from parameters module resp: %s", resp)
         if not resp or resp.error:
-            raise Exception(
-                "Unable to get device position (%s)" % resp.error
-                if resp
-                else "No response"
-            )
+            message = resp.error if resp else "No response"
+            raise Exception(f"Unable to get device position ({message})")
         position = resp.data
 
         # request api
@@ -310,13 +305,13 @@ class Openweathermap(CleepModule):
                 "mode": "json",
             },
         )
-        self.logger.debug("OWM response: %s" % (resp))
+        self.logger.debug("OWM response: %s", resp)
 
         # handle errors
         if status == 401:
             raise Exception("Invalid OWM api key")
         if status != 200:
-            raise Exception("Error requesting openweathermap api (status %s)" % status)
+            raise Exception(f"Error requesting openweathermap api (status {status})")
         if not isinstance(resp, dict) or "cod" not in resp:
             raise Exception("Invalid OWM api response format. Is API changed?")
         if resp["cod"] != 200:  # cod is int for weather request
@@ -345,13 +340,10 @@ class Openweathermap(CleepModule):
 
         # get position infos from parameters app
         resp = self.send_command("get_position", "parameters")
-        self.logger.debug("Get position from parameters module resp: %s" % resp)
+        self.logger.debug("Get position from parameters module resp: %s", resp)
         if not resp or resp.error:
-            raise Exception(
-                "Unable to get device position (%s)" % resp.error
-                if resp
-                else "No response"
-            )
+            message = resp.error if resp else "No response"
+            raise Exception(f"Unable to get device position ({message})")
         position = resp.data
 
         # request api
@@ -365,21 +357,18 @@ class Openweathermap(CleepModule):
                 "mode": "json",
             },
         )
-        self.logger.trace("OWM response: %s" % (resp))
+        self.logger.trace("OWM response: %s", resp)
 
         # handle errors
         if status == 401:
             raise Exception("Invalid OWM api key")
         if status != 200:
-            raise Exception("Error requesting openweathermap api (status %s)" % status)
+            raise Exception(f"Error requesting openweathermap api (status {status})")
         if "cod" not in resp:
             raise Exception("Invalid OWM api response format. Is API changed?")
         if resp["cod"] != "200":  # cod is string for forecast request
-            raise Exception(
-                "API message: %s" % resp["message"]
-                if "message" in resp
-                else "Unknown error from api"
-            )
+            message = resp["message"] if "message" in resp else "Unknown error from api"
+            raise Exception(f"API message: {message}")
         if "list" not in resp or len(resp["list"]) == 0:
             raise Exception("No forecast data retrieved")
 
@@ -416,21 +405,21 @@ class Openweathermap(CleepModule):
 
             # apikey configured, get weather
             weather = self._get_weather(config["apikey"])
-            self.logger.debug("Weather: %s" % weather)
+            self.logger.debug("Weather: %s", weather)
             self.__forecast = self._get_forecast(config["apikey"])
-            self.logger.debug("Forecast: %s" % self.__forecast)
+            self.logger.debug("Forecast: %s", self.__forecast)
 
             # save current weather conditions
             device = self._get_devices()[self.__owm_uuid]
             device["lastupdate"] = int(time.time())
             if "weather" in weather and len(weather["weather"]) > 0:
                 icon = weather["weather"][0].get("icon")
-                device["icon"] = self.OWM_ICON_URL % icon or "unknown"
+                device["icon"] = self.OWM_ICON_URL.format(icon or "unknown")
                 wid = weather["weather"][0].get("id")
                 device["condition"] = self.OWM_WEATHER_CODES[wid] if wid else "?"
                 device["code"] = int(wid) if wid else 0
             else:
-                device["icon"] = self.OWM_ICON_URL % "unknown"
+                device["icon"] = self.OWM_ICON_URL.format("unknown")
                 device["condition"] = "?"
                 device["code"] = 0
             if "main" in weather:
