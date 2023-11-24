@@ -2,7 +2,7 @@
     "global": {
         "html": [
             "openweathermap.widget.html", 
-            "openweathermapDialog.widget.html"
+            "openweathermap.dialog.html"
         ], 
         "css": [
             "weather-icons-wind.min.css", 

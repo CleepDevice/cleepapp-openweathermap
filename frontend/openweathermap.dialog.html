@@ -1,0 +1,106 @@
+<md-dialog flex="50">
+
+    <form>
+
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Weather</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="$ctrl.cancelDialog()">
+                    <cl-icon cl-icon="close"></cl-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+
+        <md-dialog-content layout="column" layout-padding>
+
+            <!-- weather -->
+            <div>
+                <span class="md-title">Current conditions</span>
+            </div>
+            <div layout="row" layout-align="center center">
+                <div flex="25" style="text-align:center;">
+                    <cl-icon class="icon-xl" ng-class="$ctrl.getIconClass()"></cl-icon>
+                </div>
+                <div flex="75" layout="column" layout-padding>
+                    <div style="text-align:center;">
+                        <span class="md-headline">{{$ctrl.device.condition}} {{$ctrl.device.celsius}}°C</span>
+                    </div>
+                    <div layout="row" layout-align="space-around stretch">
+                        <div>
+                            <cl-icon cl-icon="water-percent" class="icon-md">
+                                <md-tooltip>Humidity</md-tooltip>
+                            </cl-icon>
+                            <span>{{$ctrl.device.humidity}}%</span>
+                        </div>
+                        <div>
+                            <cl-icon cl-icon="gauge" class="icon-md">
+                                <md-tooltip>Pressure</md-tooltip>
+                            </cl-icon>
+                            <span>{{$ctrl.device.pressure}}hPa</span>
+                        </div>
+                        <div>
+                            <cl-icon cl-icon="weather-windy" class="icon-md">
+                                <md-tooltip>Wind (direction {{$ctrl.device.winddirection}})</md-tooltip>
+                            </cl-icon>
+                            <span>{{$ctrl.device.windspeed}}m/s {{$ctrl.device.winddirection}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- forecast -->
+            <div>
+                <span class="md-title">{{$ctrl.selection}} forecast</span>
+            </div>
+            <div ng-if="$ctrl.loading" layout="row" layout-align="space-around center" style="height:200px;">
+                <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+            </div>
+            <div ng-if="!$ctrl.loading">
+                <nvd3 options="$ctrl.graphOptions" data="$ctrl.forecastData"></nvd3>
+            </div>
+            <div layout="row">
+                <div flex></div>
+                <div>
+                    <md-button
+                        ng-class="{'md-raised md-primary': $ctrl.selection==='Temperature'}"
+                        ng-click="$ctrl.change('temperature')"
+                    >
+                        <cl-icon cl-icon="oil-temperature"></cl-icon>
+                        Temp.
+                    </md-button>
+                </div>
+                <div>
+                    <md-button
+                        ng-class="{'md-raised md-primary': $ctrl.selection==='Humidity'}"
+                        ng-click="$ctrl.change('humidity')"
+                    >
+                        <cl-icon cl-icon="water-percent"></cl-icon>
+                        Humi.
+                    </md-button>
+                </div>
+                <div>
+                    <md-button
+                        ng-class="{'md-raised md-primary': $ctrl.selection==='Pressure'}"
+                        ng-click="$ctrl.change('pressure')"
+                    >
+                        <cl-icon cl-icon="gauge"></cl-icon>
+                        Press.
+                    </md-button>
+                </div>
+                <div>
+                    <md-button
+                        ng-class="{'md-raised md-primary': $ctrl.selection==='Wind'}"
+                        ng-click="$ctrl.change('wind')"
+                    >
+                        <cl-icon cl-icon="weather-windy"></cl-icon>
+                        Wind
+                    </md-button>
+                </div>
+            </div>
+
+        </md-dialog-content>
+
+    </form>
+
+</md-dialog>

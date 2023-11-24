@@ -261,8 +261,8 @@ function($mdDialog, $q, openweathermapService, cleepService) {
 
             $mdDialog.show({
                 controller: function() { return self; },
-                controllerAs: 'owmCtl',
-                templateUrl: 'openweathermapDialog.widget.html',
+                controllerAs: '$ctrl',
+                templateUrl: 'openweathermap.dialog.html',
                 parent: angular.element(document.body),
                 clickOutsideToClose: true,
                 onComplete: self.loadDialogData,
@@ -288,7 +288,7 @@ function($mdDialog, $q, openweathermapService, cleepService) {
             'device': '='
         },
         controller: widgetOpenweathermapController,
-        controllerAs: 'widgetCtl',
+        controllerAs: '$ctrl',
     };
 }]);
 

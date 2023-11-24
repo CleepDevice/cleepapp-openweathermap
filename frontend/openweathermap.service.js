@@ -4,8 +4,7 @@
  */
 angular
 .module('Cleep')
-.service('openweathermapService', ['$q', '$rootScope', 'rpcService', 'cleepService',
-function($q, $rootScope, rpcService, cleepService) {
+.service('openweathermapService', ['rpcService', function(rpcService) {
     var self = this;
 
     self.setApikey = function(apikey) {

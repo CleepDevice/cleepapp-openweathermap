@@ -1,32 +1,21 @@
 <div>
-
-<md-card class="widget-bg-color" style="width: 250px;">
-    <md-card-header>
-        <md-card-avatar>
-            <md-icon md-svg-icon="weather-cloudy"></md-icon>
-        </md-card-avatar>
-        <md-card-header-text>
-            <span class="md-title">{{widgetCtl.device.name}}</span>
-            <span class="md-subhead">{{widgetCtl.device.type}}</span>
-        </md-card-header-text>
-    </md-card-header>
-    <md-card-content layout="row" layout-align="center center" md-colors="{{widgetCtl.device.__widget.mdcolors}}">
-        <div>
-            <md-icon class="icon-md" style="margin-right:25px;" ng-class="widgetCtl.getIconClass()"></md-icon>
-        </div>
-        <div>
-            <span class="md-display-1">{{widgetCtl.device.celsius | temperature:'celsius'}}</span>
-        </div>
-    </md-card-content>
-    <md-card-actions layout="column" layout-align="start" ng-if="widgetCtl.hasCharts">
-        <md-button ng-click="widgetCtl.openDialog()" class="md-raised">Forecast</md-button>
-    </md-card-actions>
-    <md-card-footer>
-        <md-icon md-svg-icon="clock">
-            <md-tooltip md-direction="top">Last update</md-tooltip>
-        </md-icon>
-        <span>{{widgetCtl.device.lastupdate | hrDatetime:true}}</span>
-    </md-card-footer>
-</md-card>
-
+    <widget-basic cl-device="$ctrl.device" cl-icon="'weather-cloudy'" cl-title="$ctrl.device.name" cl-subtitle="$ctrl.device.type" cl-controller="$ctrl" cl-controller-name="$ctrl">
+        <widget-content layout="row" layout-align="center center" layout-padding>
+            <div>
+                <cl-icon class="icon-md" ng-class="$ctrl.getIconClass()"></cl-icon>
+            </div>
+            <div>
+                <span class="md-display-1">{{ device.celsius | hrTemperature:'celsius' }}</span>
+            </div>
+        </widget-content>
+        <widget-footer layout="row" layout-align="space-between center">
+            <div>
+                <cl-icon cl-icon="clock" cl-tooltip="Last update"></cl-icon>
+                <span>{{ $ctrl.device.lastupdate | hrDatetime:true }}</span>
+            </div>
+            <md-button class="md-raised" ng-click="$ctrl.openDialog()">
+                <cl-icon cl-icon="chart-areaspline"></cl-icon>
+            </md-button>
+        </widget-footer>
+    </widget-basic>
 </div>

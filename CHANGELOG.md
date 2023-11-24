@@ -1,7 +1,11 @@
 # Changelog
 
+## [UNRELEASED] - xxx
+### Changed
+- Migrate to Cleep components
+
 ## [1.2.4] - 2023-03-14
-###
+### Changed
 - Improve code quality (lint+black)
 
 ## [1.2.3] - 2022-02-03

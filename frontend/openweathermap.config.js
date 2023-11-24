@@ -42,7 +42,7 @@ function(toast, openweathermapService, cleepService) {
         replace: true,
         scope: true,
         controller: openweathermapController,
-        controllerAs: 'openweathermapCtl',
+        controllerAs: '$ctrl',
     };
 }]);
 
