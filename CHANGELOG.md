@@ -1,8 +1,9 @@
 # Changelog
 
-## [UNRELEASED] - xxx
+## [1.3.0] - 2024-10-23
 ### Changed
 - Migrate to Cleep components
+- Use task_factory
 
 ## [1.2.4] - 2023-03-14
 ### Changed

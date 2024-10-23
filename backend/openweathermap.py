@@ -3,7 +3,6 @@
 
 import time
 import requests
-from cleep.libs.internals.task import Task
 from cleep.core import CleepModule
 from cleep.common import CATEGORIES
 
@@ -20,7 +19,7 @@ class Openweathermap(CleepModule):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.2.4"
+    MODULE_VERSION = "1.3.0"
     MODULE_DEPS = []
     MODULE_CATEGORY = CATEGORIES.SERVICE
     MODULE_DESCRIPTION = "Gets weather conditions using OpenWeatherMap service"
@@ -217,16 +216,19 @@ class Openweathermap(CleepModule):
         Start weather task
         """
         if self.weather_task is None:
-            self.weather_task = Task(
-                self.OWM_TASK_DELAY, self._weather_task, self.logger
+            self.weather_task = self.task_factory.create_task(
+                interval=self.OWM_TASK_DELAY, task=self._weather_task, end_callback=self.end_callback,
             )
             self.weather_task.start()
+
+    def end_callback(self):
+        self.logger.debug('Openweather task terminated')
 
     def _stop_weather_task(self):
         """
         Stop weather task
         """
-        if self.weather_task is not None:
+        if self.weather_task:
             self.weather_task.stop()
 
     def _restart_weather_task(self):
