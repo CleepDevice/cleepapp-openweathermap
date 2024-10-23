@@ -217,12 +217,10 @@ class Openweathermap(CleepModule):
         """
         if self.weather_task is None:
             self.weather_task = self.task_factory.create_task(
-                interval=self.OWM_TASK_DELAY, task=self._weather_task, end_callback=self.end_callback,
+                interval=self.OWM_TASK_DELAY,
+                task=self._weather_task,
             )
             self.weather_task.start()
-
-    def end_callback(self):
-        self.logger.debug('Openweather task terminated')
 
     def _stop_weather_task(self):
         """
@@ -259,7 +257,7 @@ class Openweathermap(CleepModule):
         resp_data = None
         try:
             self.logger.debug("Request params: %s", params)
-            resp = requests.get(url, params=params)
+            resp = requests.get(url, params=params, timeout=30.0)
             resp_data = resp.json()
             self.logger.debug("Response data: %s", resp_data)
             status = resp.status_code
@@ -331,7 +329,21 @@ class Openweathermap(CleepModule):
             apikey (string): OWM apikey
 
         Returns:
-            dict: forecast (see http://openweathermap.org/forecast5 for output format)
+            list: forecast (see http://openweathermap.org/forecast5 for output format)::
+
+                [
+                    {
+                        maini (dict),
+                        weather (dict),
+                        clouds (dict),
+                        wind (dict),
+                        visibility (int),
+                        pop (float),
+                        rain (dict),
+                        sys (dict),
+                    },
+                    ...
+                ]
 
         Raises:
             InvalidParameter: if input parameter is invalid
@@ -503,7 +515,25 @@ class Openweathermap(CleepModule):
         Useful to use it in action script
 
         Returns:
-            dict: device information
+            dict: device information::
+
+            {
+                coord (dict),
+                weather (list),
+                base (str),
+                main (dict),
+                visibility (int),
+                wind (dict),
+                rain (dict),
+                clouds (dict),
+                dt (float),
+                sys (dict),
+                timezone (int),
+                id (int),
+                name (str),
+                cod (int),
+            }
+
         """
         return self._get_devices()[self.__owm_uuid]
 
@@ -513,6 +543,21 @@ class Openweathermap(CleepModule):
         May be empty if cleep just restarted.
 
         Returns:
-            list: list of forecast data (every 3 hours)
+            list: list of forecast data (every 3 hours)::
+
+                [
+                    {
+                        maini (dict),
+                        weather (dict),
+                        clouds (dict),
+                        wind (dict),
+                        visibility (int),
+                        pop (float),
+                        rain (dict),
+                        sys (dict),
+                    },
+                    ...
+                ]
+
         """
         return self.__forecast
