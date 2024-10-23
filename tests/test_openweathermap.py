@@ -1,3 +1,4 @@
+from cleep.libs.tests import session
 import unittest
 import logging
 import os
@@ -14,11 +15,10 @@ from cleep.exception import (
     CommandError,
     Unauthorized,
 )
-from cleep.libs.tests import session
 from backend.weathertoidentifiedmessageformatter import WeatherToIdentifiedMessageFormatter
 from backend.openweathermapweatherupdateevent import OpenweathermapWeatherUpdateEvent
 from cleep.profiles.identifiedmessageprofile import IdentifiedMessageProfile
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 import responses
 
 
@@ -321,8 +321,8 @@ class TestOpenweathermap(unittest.TestCase):
     def tearDown(self):
         self.session.clean()
 
-    def init(self, start_module=True):
-        self.module = self.session.setup(Openweathermap)
+    def init(self, start_module=True, mock_on_start=True, mock_on_stop=True):
+        self.module = self.session.setup(Openweathermap, mock_on_start=mock_on_start, mock_on_stop=mock_on_stop)
         if start_module:
             self.session.start_module(self.module)
 
@@ -368,7 +368,7 @@ class TestOpenweathermap(unittest.TestCase):
         self.assertEqual(self.module._Openweathermap__owm_uuid, "1234567890")
 
     def test_on_start(self):
-        self.init(False)
+        self.init(False, mock_on_start=False)
         self.module._force_weather_update = Mock()
         self.module._start_weather_task = Mock()
 
@@ -378,48 +378,50 @@ class TestOpenweathermap(unittest.TestCase):
         self.module._start_weather_task.assert_called()
 
     def test_on_stop(self):
-        self.init(False)
+        self.init(False, mock_on_stop=False)
         self.module._stop_weather_task = Mock()
 
-        self.session.start_module(self.module)
         self.module._on_stop()
 
-        self.assertTrue(self.module._stop_weather_task.called)
+        self.module._stop_weather_task.assert_called()
 
-    @patch("backend.openweathermap.Task")
-    def test_start_weather_task(self, mock_task):
+    def test_start_weather_task(self):
         self.init()
+        mock_task = Mock()
+        self.session.task_factory.create_task = Mock(return_value=mock_task)
 
         self.module._start_weather_task()
 
-        mock_task.assert_called()
-        mock_task.return_value.start.assert_called()
+        self.assertTrue(mock_task.start.called)
 
-    @patch("backend.openweathermap.Task")
-    def test_start_weather_task_with_existing_task(self, mock_task):
+    def test_start_weather_task_with_existing_task(self):
         self.init()
+        mock_task = Mock()
+        self.session.task_factory.create_task = Mock(return_value=mock_task)
         self.module.weather_task = 123
 
         self.module._start_weather_task()
 
-        mock_task.return_value.start.assert_called()
+        mock_task.start.assert_not_called()
 
-    @patch("backend.openweathermap.Task")
-    def test_stop_weather_task(self, mock_task):
+    def test_stop_weather_task(self):
         self.init()
+        mock_task = Mock()
+        self.module.weather_task = mock_task
 
         self.module._stop_weather_task()
 
-        mock_task.return_value.stop.assert_called()
+        mock_task.stop.assert_called()
 
-    @patch("backend.openweathermap.Task")
-    def test_stop_weather_task_no_task(self, mock_task):
+    def test_stop_weather_task_no_task(self):
         self.init()
+        mock_task = Mock()
+        self.session.task_factory.create_task = Mock(return_value=mock_task)
         self.module.weather_task = None
 
         self.module._stop_weather_task()
 
-        self.assertFalse(mock_task.return_value.stop.called)
+        mock_task.stop.assert_not_called()
 
     def test_restart_weather_task(self):
         self.init()
