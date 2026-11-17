@@ -3,11 +3,9 @@ import unittest
 import logging
 import os
 import re
-import sys
 import json
 import copy
 
-sys.path.append("../")
 from backend.openweathermap import Openweathermap
 from cleep.exception import (
     InvalidParameter,

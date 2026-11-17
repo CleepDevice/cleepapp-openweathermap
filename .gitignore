@@ -3,7 +3,8 @@ docs/_build
 docs/source
 docs/*.zip
 docs/*.txt
-
 **/*.pyc
 **/*.swp
 **/.coverage
+**/__pycache__
+
